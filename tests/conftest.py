@@ -13,10 +13,14 @@ def flask_app(tmp_path):
         ADMIN_USERNAME="andy",
         ADMIN_PASSWORD_HASH=generate_password_hash("correct-horse-battery-staple"),
         SITE_URL="https://andyjingliu.com",
+        YOUTUBE_CHANNEL_ID="",
         APP_ENV="testing",
         SESSION_COOKIE_SECURE=False,
     )
     project.login_attempts.clear()
+    project.youtube_feed_cache.update(
+        {"channel_id": "", "expires_at": 0.0, "videos": []}
+    )
     with project.app.app_context():
         project.init_db(seed=True)
     yield project.app

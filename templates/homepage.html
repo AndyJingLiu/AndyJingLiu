@@ -77,7 +77,7 @@
           <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg" alt="{{ video.title }}" class="video-thumb" loading="lazy" />
           <button class="video-play-button" type="button" aria-label="{{ '播放' if locale == 'zh' else 'Play' }} {{ video.title }}">▶</button>
         </div>
-        <h3>{{ video.title }}</h3>
+        <h3><a href="{{ video.watch_url }}" target="_blank" rel="noopener noreferrer">{{ video.title }}</a></h3>
       </article>
       {% else %}<div class="empty-panel"><p>{{ ui.empty_videos }}</p></div>{% endfor %}
     </div>

@@ -8,7 +8,7 @@ The source code for AndyJingLiu's bilingual personal website: articles, ideas, Y
 - A personal-brand homepage with editable bilingual hero and biography content
 - Markdown article publishing, editing, deletion, and per-article language selection
 - Sanitized Markdown rendering to prevent stored script injection
-- Video pages with privacy-enhanced YouTube embeds
+- Automatically refreshed latest-video feeds with privacy-enhanced YouTube embeds
 - Password-protected admin routes
 - CSRF protection on every form that changes data
 - SQLite schema initialization and starter-content seeding
@@ -67,7 +67,7 @@ flask --app app run --debug
 
 Open [http://127.0.0.1:5000](http://127.0.0.1:5000). The admin login is at `/admin/login`.
 
-The X and YouTube channel URLs can be entered under **Admin → Edit homepage**. Empty social fields are not displayed publicly. Chinese pages live under `/zh/`; English pages live under `/en/`.
+The X and YouTube channel URLs can be entered under **Admin → Edit homepage**. The latest regular public videos are loaded from YouTube's official channel feed and cached for 15 minutes; Shorts are excluded. Empty social fields are not displayed publicly. Chinese pages live under `/zh/`; English pages live under `/en/`.
 
 ## Tests and security checks
 
@@ -92,6 +92,8 @@ Set these environment variables in the hosting platform:
 | `ADMIN_PASSWORD_HASH` | Output from `flask --app app hash-password` |
 | `DATABASE_PATH` | A path on a persistent disk, such as `/data/database.db` |
 | `SITE_URL` | `https://andyjingliu.com` |
+| `YOUTUBE_CHANNEL_ID` | `UCL6USkBdRjEeOpeLo2Lq9aA` |
+| `YOUTUBE_CHANNEL_URL` | `https://www.youtube.com/@AndyJingLiu` |
 | `TRUST_PROXY` | `true` when hosted behind a trusted reverse proxy |
 | `TRUSTED_HOSTS` | `andyjingliu.com,www.andyjingliu.com` |
 

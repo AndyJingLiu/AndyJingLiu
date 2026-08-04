@@ -1,4 +1,7 @@
 import sqlite3
+from io import BytesIO
+
+import app as project
 
 
 def session_csrf(client):
@@ -37,6 +40,35 @@ def test_public_pages_and_metadata(client):
     assert b'href="/en/"' in homepage.data
     assert homepage.headers["X-Content-Type-Options"] == "nosniff"
     assert "default-src 'self'" in homepage.headers["Content-Security-Policy"]
+
+
+def test_latest_youtube_videos_are_loaded_and_shorts_are_excluded(
+    client, flask_app, monkeypatch
+):
+    feed = b"""<?xml version="1.0" encoding="UTF-8"?>
+    <feed xmlns="http://www.w3.org/2005/Atom"
+          xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+      <entry><yt:videoId>regular1234</yt:videoId><title>Newest regular video</title>
+        <published>2026-08-01T12:00:00+00:00</published>
+        <link rel="alternate" href="https://www.youtube.com/watch?v=regular1234" />
+      </entry>
+      <entry><yt:videoId>short123456</yt:videoId><title>A short</title>
+        <published>2026-08-01T11:00:00+00:00</published>
+        <link rel="alternate" href="https://www.youtube.com/shorts/short123456" />
+      </entry>
+    </feed>"""
+
+    flask_app.config["YOUTUBE_CHANNEL_ID"] = "UCL6USkBdRjEeOpeLo2Lq9aA"
+    project.youtube_feed_cache.update(
+        {"channel_id": "", "expires_at": 0.0, "videos": []}
+    )
+    monkeypatch.setattr(project, "urlopen", lambda *args, **kwargs: BytesIO(feed))
+
+    response = client.get("/zh/videos")
+    assert response.status_code == 200
+    assert b"Newest regular video" in response.data
+    assert b"regular1234" in response.data
+    assert b"A short" not in response.data
 
 
 def test_admin_routes_require_login(client):

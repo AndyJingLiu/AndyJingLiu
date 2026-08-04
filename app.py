@@ -5,13 +5,17 @@ import re
 import secrets
 import sqlite3
 import string
+import threading
 import time
 import unicodedata
 from contextlib import closing
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path, PurePosixPath
-from urllib.parse import urljoin, urlsplit
+from urllib.error import URLError
+from urllib.parse import urlencode, urljoin, urlsplit
+from urllib.request import Request, urlopen
+from xml.etree import ElementTree
 
 import bleach
 import click
@@ -64,6 +68,13 @@ app.config.update(
     SITE_URL=os.getenv("SITE_URL", "").rstrip("/"),
     ADMIN_USERNAME=os.getenv("ADMIN_USERNAME", ""),
     ADMIN_PASSWORD_HASH=os.getenv("ADMIN_PASSWORD_HASH", ""),
+    YOUTUBE_CHANNEL_ID=os.getenv(
+        "YOUTUBE_CHANNEL_ID", "UCL6USkBdRjEeOpeLo2Lq9aA"
+    ).strip(),
+    YOUTUBE_CHANNEL_URL=os.getenv(
+        "YOUTUBE_CHANNEL_URL", "https://www.youtube.com/@AndyJingLiu"
+    ).rstrip("/"),
+    YOUTUBE_FEED_CACHE_SECONDS=900,
     MAX_CONTENT_LENGTH=2 * 1024 * 1024,
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     SESSION_COOKIE_HTTPONLY=True,
@@ -114,6 +125,17 @@ LOGIN_WINDOW_SECONDS = 15 * 60
 LOGIN_MAX_ATTEMPTS = 5
 SUPPORTED_LOCALES = {"zh", "en"}
 login_attempts: dict[str, list[float]] = {}
+youtube_feed_cache: dict[str, object] = {
+    "channel_id": "",
+    "expires_at": 0.0,
+    "videos": [],
+}
+youtube_feed_lock = threading.Lock()
+
+YOUTUBE_NAMESPACES = {
+    "atom": "http://www.w3.org/2005/Atom",
+    "yt": "http://www.youtube.com/xml/schemas/2015",
+}
 
 UI_COPY = {
     "zh": {
@@ -133,7 +155,7 @@ UI_COPY = {
         "articles_title": "文章",
         "articles_intro": "这里收录我的长期写作、观察与思考。",
         "videos_title": "视频",
-        "videos_intro": "在这里观看我的最新视频，也可以前往 YouTube 订阅频道。",
+        "videos_intro": "这里会自动显示我在 YouTube 发布的最新视频。",
         "about_title": "关于我",
         "empty_articles": "中文文章正在准备中。",
         "empty_videos": "视频内容正在准备中。",
@@ -162,7 +184,7 @@ UI_COPY = {
             "Long-form writing, observations, and ideas from AndyJingLiu."
         ),
         "videos_title": "Videos",
-        "videos_intro": "Watch my latest videos here or subscribe on YouTube.",
+        "videos_intro": "My latest YouTube uploads appear here automatically.",
         "about_title": "About",
         "empty_articles": "English articles are coming soon.",
         "empty_videos": "Videos are coming soon.",
@@ -195,6 +217,14 @@ def ensure_homepage_columns(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE homepage_content ADD COLUMN x_url TEXT")
     if "youtube_url" not in columns:
         conn.execute("ALTER TABLE homepage_content ADD COLUMN youtube_url TEXT")
+    conn.execute(
+        """
+        UPDATE homepage_content
+        SET youtube_url = ?
+        WHERE youtube_url IS NULL OR TRIM(youtube_url) = ''
+        """,
+        (app.config["YOUTUBE_CHANNEL_URL"],),
+    )
     localized_defaults = {
         "hero_title_zh": "AndyJingLiu",
         "hero_subtitle_zh": "这是我的个人网站，收录文章、思考与视频创作。",
@@ -376,6 +406,120 @@ def slugify(text: str) -> str:
     text = text.encode("ascii", "ignore").decode("ascii")
     text = re.sub(r"[^a-z0-9]+", "-", text.lower().strip())
     return text.strip("-") or "article"
+
+
+def parse_youtube_feed(xml_data: bytes) -> list[dict[str, str]]:
+    """Return regular public videos from YouTube's official Atom feed."""
+    root = ElementTree.fromstring(xml_data)
+    videos = []
+    for entry in root.findall("atom:entry", YOUTUBE_NAMESPACES):
+        video_id = entry.findtext(
+            "yt:videoId", default="", namespaces=YOUTUBE_NAMESPACES
+        )
+        title = entry.findtext("atom:title", default="", namespaces=YOUTUBE_NAMESPACES)
+        published = entry.findtext(
+            "atom:published", default="", namespaces=YOUTUBE_NAMESPACES
+        )
+        link = entry.find("atom:link[@rel='alternate']", YOUTUBE_NAMESPACES)
+        alternate_url = link.get("href", "") if link is not None else ""
+        if (
+            not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id)
+            or not title
+            or "/shorts/" in alternate_url
+        ):
+            continue
+        published_at = ""
+        if published:
+            try:
+                published_at = datetime.fromisoformat(
+                    published.replace("Z", "+00:00")
+                ).strftime("%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                published_at = ""
+        videos.append(
+            {
+                "title": title,
+                "youtube_id": video_id,
+                "description": "",
+                "published_at": published_at,
+                "watch_url": f"https://www.youtube.com/watch?v={video_id}",
+            }
+        )
+    return videos
+
+
+def fetch_youtube_videos() -> list[dict[str, str]]:
+    """Fetch and briefly cache the channel's latest regular public videos."""
+    channel_id = app.config["YOUTUBE_CHANNEL_ID"]
+    if not re.fullmatch(r"UC[A-Za-z0-9_-]{22}", channel_id):
+        return []
+
+    now = time.monotonic()
+    if (
+        youtube_feed_cache["channel_id"] == channel_id
+        and now < youtube_feed_cache["expires_at"]
+    ):
+        return list(youtube_feed_cache["videos"])
+
+    with youtube_feed_lock:
+        now = time.monotonic()
+        if (
+            youtube_feed_cache["channel_id"] == channel_id
+            and now < youtube_feed_cache["expires_at"]
+        ):
+            return list(youtube_feed_cache["videos"])
+
+        feed_url = "https://www.youtube.com/feeds/videos.xml?" + urlencode(
+            {"channel_id": channel_id}
+        )
+        request_headers = {
+            "Accept": "application/atom+xml, application/xml;q=0.9",
+            "User-Agent": "AndyJingLiu.com/1.0",
+        }
+        try:
+            with urlopen(
+                Request(feed_url, headers=request_headers), timeout=5
+            ) as response:
+                videos = parse_youtube_feed(response.read())
+        except (ElementTree.ParseError, OSError, TimeoutError, URLError):
+            app.logger.warning("Unable to refresh YouTube feed", exc_info=True)
+            if youtube_feed_cache["channel_id"] == channel_id:
+                return list(youtube_feed_cache["videos"])
+            return []
+
+        youtube_feed_cache.update(
+            {
+                "channel_id": channel_id,
+                "expires_at": now + int(app.config["YOUTUBE_FEED_CACHE_SECONDS"]),
+                "videos": videos,
+            }
+        )
+        return list(videos)
+
+
+def database_videos(limit: int | None = None) -> list[dict[str, object]]:
+    query = "SELECT id, title, youtube_id, description FROM videos ORDER BY id DESC"
+    params: tuple[int, ...] = ()
+    if limit is not None:
+        query += " LIMIT ?"
+        params = (limit,)
+    with closing(get_db_connection()) as conn:
+        rows = conn.execute(query, params).fetchall()
+    return [
+        {
+            **dict(row),
+            "published_at": "",
+            "watch_url": f"https://www.youtube.com/watch?v={row['youtube_id']}",
+        }
+        for row in rows
+    ]
+
+
+def latest_videos(limit: int) -> list[dict[str, object]]:
+    videos = fetch_youtube_videos()
+    if videos:
+        return videos[:limit]
+    return database_videos(limit)
 
 
 def generate_unique_slug(title: str, conn: sqlite3.Connection) -> str:
@@ -637,9 +781,7 @@ def homepage_localized(locale):
             """,
             (locale,),
         ).fetchall()
-        videos = conn.execute(
-            "SELECT * FROM videos ORDER BY id DESC LIMIT 4"
-        ).fetchall()
+    videos = latest_videos(4)
     home_content = localized_home_content(home_row, locale)
     meta_description = home_content["hero_subtitle"]
     meta_title = (
@@ -742,10 +884,7 @@ def videos():
 @app.route("/<locale>/videos")
 def videos_localized(locale):
     locale = require_locale(locale)
-    with closing(get_db_connection()) as conn:
-        video_rows = conn.execute(
-            "SELECT id, title, youtube_id, description FROM videos ORDER BY id DESC"
-        ).fetchall()
+    video_rows = latest_videos(12)
     return render_template(
         "videos.html",
         videos=video_rows,
@@ -839,9 +978,7 @@ def admin_dashboard():
             ORDER BY created_at DESC
             LIMIT 5
             """).fetchall()
-        video_rows = conn.execute(
-            "SELECT id, title FROM videos ORDER BY id DESC LIMIT 5"
-        ).fetchall()
+    video_rows = latest_videos(5)
     return render_template(
         "admin_dashboard.html",
         articles=article_rows,
