@@ -1,42 +1,40 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ locale }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ meta_title | default("Andy Jing Liu · Insights & Analysis") }}</title>
-    <meta
-      name="description"
-      content="{{ meta_description | default('Articles, commentary, and videos by Andy Jing Liu.') }}"
-    />
+    <title>{{ meta_title | default("AndyJingLiu · Personal site") }}</title>
+    <meta name="description" content="{{ meta_description | default('The personal site of AndyJingLiu: articles, ideas, and videos.') }}" />
     <meta name="robots" content="{{ meta_robots | default('index, follow') }}" />
     <link rel="canonical" href="{{ canonical_url }}" />
+    {% if alternate_url %}
+    <link rel="alternate" hreflang="{{ 'en' if locale == 'zh' else 'zh-CN' }}" href="{{ site_url }}{{ alternate_url }}" />
+    {% endif %}
     <link rel="icon" type="image/png" href="{{ static_asset_url('favicon.png') }}" />
 
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
-    <meta property="og:site_name" content="Andy Jing Liu" />
-    <meta property="og:title" content="{{ meta_title | default('Andy Jing Liu · Insights & Analysis') }}" />
-    <meta property="og:description" content="{{ meta_description | default('Articles, commentary, and videos by Andy Jing Liu.') }}" />
+    <meta property="og:site_name" content="AndyJingLiu" />
+    <meta property="og:title" content="{{ meta_title | default('AndyJingLiu · Personal site') }}" />
+    <meta property="og:description" content="{{ meta_description | default('Articles, ideas, and videos by AndyJingLiu.') }}" />
     <meta property="og:url" content="{{ canonical_url }}" />
     {% if og_image %}<meta property="og:image" content="{{ og_image }}" />{% endif %}
     <meta name="twitter:card" content="{% if og_image %}summary_large_image{% else %}summary{% endif %}" />
 
     <link rel="stylesheet" href="{{ static_asset_url('styles.css') }}" />
   </head>
-  <body>
+  <body class="locale-{{ locale }}">
     <header class="site-header">
-      <nav class="site-nav" aria-label="Primary navigation">
-        <a class="site-brand" href="{{ url_for('homepage') }}">Andy Jing Liu</a>
+      <nav class="site-nav" aria-label="{{ '主要导航' if locale == 'zh' else 'Primary navigation' }}">
+        <a class="site-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu<span>.</span></a>
         <div class="site-nav-links">
-          <a href="{{ url_for('articles') }}">Articles</a>
-          <a href="{{ url_for('videos') }}">Videos</a>
-          {% if social_links.x_url %}
-          <a href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">X</a>
-          {% endif %}
-          {% if social_links.youtube_url %}
-          <a href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube</a>
-          {% endif %}
+          <a href="{{ url_for('articles_localized', locale=locale) }}">{{ ui.nav_articles }}</a>
+          <a href="{{ url_for('videos_localized', locale=locale) }}">{{ ui.nav_videos }}</a>
+          <a href="{{ url_for('about_localized', locale=locale) }}">{{ ui.nav_about }}</a>
+          {% if social_links.x_url %}<a class="nav-social" href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">X</a>{% endif %}
+          {% if social_links.youtube_url %}<a class="nav-social" href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube</a>{% endif %}
+          {% if alternate_url %}<a class="language-switch" href="{{ alternate_url }}" hreflang="{{ 'en' if locale == 'zh' else 'zh-CN' }}">{{ ui.language_label }}</a>{% endif %}
+          {% if admin_logged_in %}<a href="{{ url_for('admin_dashboard') }}">Admin</a>{% endif %}
           {% if admin_logged_in %}
-          <a href="{{ url_for('admin_dashboard') }}">Admin</a>
           <form class="nav-logout-form" method="post" action="{{ url_for('admin_logout') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" class="nav-link-button">Log out</button>
@@ -50,9 +48,7 @@
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-messages" aria-live="polite">
-          {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endfor %}
+          {% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}
         </div>
         {% endif %}
       {% endwith %}
@@ -60,7 +56,19 @@
     </main>
 
     <footer class="site-footer">
-      <p>&copy; {{ current_year }} Andy Jing Liu</p>
+      <div class="footer-inner">
+        <div>
+          <a class="footer-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu<span>.</span></a>
+          <p>{{ '我的独立个人网站。' if locale == 'zh' else 'My independent personal site.' }}</p>
+        </div>
+        <div class="footer-links">
+          <a href="{{ url_for('articles_localized', locale=locale) }}">{{ ui.nav_articles }}</a>
+          <a href="{{ url_for('videos_localized', locale=locale) }}">{{ ui.nav_videos }}</a>
+          {% if social_links.x_url %}<a href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">X</a>{% endif %}
+          {% if social_links.youtube_url %}<a href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube</a>{% endif %}
+        </div>
+      </div>
+      <p class="copyright">&copy; {{ current_year }} AndyJingLiu</p>
     </footer>
 
     <script src="{{ static_asset_url('script.js') }}" defer></script>

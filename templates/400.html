@@ -2,8 +2,8 @@
 {% block content %}
 <div class="error-page">
   <h1>400</h1>
-  <h2>Request could not be verified</h2>
-  <p>{{ error.description or "Please go back, refresh the page, and try again." }}</p>
-  <a href="{{ url_for('homepage') }}" class="error-home-link">← Back to homepage</a>
+  <h2>{{ '请求无法验证' if locale == 'zh' else 'Request could not be verified' }}</h2>
+  <p>{{ '请返回并刷新页面后重试。' if locale == 'zh' else (error.description or 'Please go back, refresh the page, and try again.') }}</p>
+  <a href="{{ url_for('homepage_localized', locale=locale) }}" class="text-link">← {{ '返回首页' if locale == 'zh' else 'Back to homepage' }}</a>
 </div>
 {% endblock %}

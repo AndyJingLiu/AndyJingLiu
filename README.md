@@ -1,11 +1,12 @@
 # AndyJingLiu.com
 
-The source code for Andy Jing Liu's independent personal website: long-form articles, commentary, and video links in one owned publishing platform.
+The source code for AndyJingLiu's bilingual personal website: articles, ideas, YouTube videos, and X links in one independent home.
 
 ## What the site includes
 
-- A personal-brand homepage with editable hero, biography, X profile, and YouTube channel links
-- Markdown article publishing, editing, and deletion
+- Chinese-first public pages with a complete English version and language switcher
+- A personal-brand homepage with editable bilingual hero and biography content
+- Markdown article publishing, editing, deletion, and per-article language selection
 - Sanitized Markdown rendering to prevent stored script injection
 - Video pages with privacy-enhanced YouTube embeds
 - Password-protected admin routes
@@ -66,7 +67,7 @@ flask --app app run --debug
 
 Open [http://127.0.0.1:5000](http://127.0.0.1:5000). The admin login is at `/admin/login`.
 
-The X and YouTube channel URLs can be entered under **Admin → Edit homepage**. Empty social fields are not displayed publicly.
+The X and YouTube channel URLs can be entered under **Admin → Edit homepage**. Empty social fields are not displayed publicly. Chinese pages live under `/zh/`; English pages live under `/en/`.
 
 ## Tests and security checks
 

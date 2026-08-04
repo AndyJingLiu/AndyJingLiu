@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS articles (
     summary TEXT,
     body TEXT NOT NULL,
     image_path TEXT,
+    language TEXT NOT NULL DEFAULT 'en' CHECK (language IN ('zh', 'en')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -22,6 +23,10 @@ CREATE TABLE IF NOT EXISTS homepage_content (
     hero_image_path TEXT,
     about_title TEXT NOT NULL,
     about_body TEXT NOT NULL,
+    hero_title_zh TEXT,
+    hero_subtitle_zh TEXT,
+    about_title_zh TEXT,
+    about_body_zh TEXT,
     x_url TEXT,
     youtube_url TEXT
 );

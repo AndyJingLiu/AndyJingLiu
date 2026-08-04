@@ -1,32 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="page">
-  <h1>Articles</h1>
-  <p class="page-intro">Long-form writing, commentary, and ideas from Andy Jing Liu.</p>
-  <ul class="article-list">
+<div class="editorial-page">
+  <header class="page-header"><p class="eyebrow">ANDYJINGLIU · {{ ui.nav_articles }}</p><h1>{{ ui.articles_title }}</h1><p>{{ ui.articles_intro }}</p></header>
+  <div class="article-list">
     {% for article in articles %}
-    <li class="article-item">
-      {% if article.image_path %}
-      <a href="{{ url_for('article_detail', slug=article.slug) }}" class="article-thumb-link" aria-hidden="true" tabindex="-1">
-        <img
-          src="{{ static_asset_url(article.image_path) }}"
-          alt=""
-          class="article-image"
-          loading="lazy"
-          width="1200"
-          height="1600"
-        />
-      </a>
-      {% endif %}
-      <div class="article-content">
-        <h2><a href="{{ url_for('article_detail', slug=article.slug) }}">{{ article.title }}</a></h2>
-        {% if article.created_at %}<p class="article-meta">{{ article.created_at | nice_date }}</p>{% endif %}
-        {% if article.summary %}<p class="article-summary">{{ article.summary }}</p>{% endif %}
+    <article class="article-row">
+      <p class="article-number">{{ "%02d" | format(loop.index) }}</p>
+      {% if article.image_path %}<a class="article-row-image" href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}"><img src="{{ static_asset_url(article.image_path) }}" alt="" loading="lazy" width="1200" height="1600" /></a>{% endif %}
+      <div class="article-row-copy">
+        <p class="article-meta">{{ article.created_at | nice_date }}</p>
+        <h2><a href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}">{{ article.title }}</a></h2>
+        {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
+        <a class="text-link" href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}">{{ '阅读全文' if locale == 'zh' else 'Read article' }} <span>→</span></a>
       </div>
-    </li>
-    {% else %}
-    <li class="empty-state">No articles yet.</li>
-    {% endfor %}
-  </ul>
+    </article>
+    {% else %}<div class="empty-panel"><p>{{ ui.empty_articles }}</p></div>{% endfor %}
+  </div>
 </div>
 {% endblock %}

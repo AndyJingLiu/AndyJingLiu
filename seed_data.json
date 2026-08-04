@@ -1,10 +1,14 @@
 {
   "homepage_content": {
-    "hero_title": "Andy Jing Liu · Insights & Analysis",
-    "hero_subtitle": "Bilingual commentary on China, Canada, immigration, technology, and global trends.",
+    "hero_title": "AndyJingLiu",
+    "hero_subtitle": "My independent home for articles, ideas, and video work.",
+    "hero_title_zh": "AndyJingLiu",
+    "hero_subtitle_zh": "这是我的个人网站，收录文章、思考与视频创作。",
     "hero_image_path": "images/IMG_1761.webp",
     "about_title": "About Andy",
-    "about_body": "I write long-form articles and create videos that make complex ideas easier to understand. This independent site is the home of my work across writing, X, and YouTube.",
+    "about_body": "I use this independent site to share my writing, ideas, and video work, and to connect everything I publish on X and YouTube.",
+    "about_title_zh": "关于我",
+    "about_body_zh": "我在这里分享自己的文章、思考与视频，并把发布在 X 和 YouTube 上的内容集中到同一个独立空间。",
     "x_url": "",
     "youtube_url": ""
   },
@@ -15,14 +19,16 @@
       "summary": "Why I created an independent home for my writing and videos.",
       "body": "# Why I Built This Site\n\nI wanted an independent home for my writing, analysis, and videos.\n\n## Goals\n\n- Share long-form analysis\n- Explain complex ideas clearly\n- Build a direct relationship with my audience\n\nThis site brings my articles, X commentary, and YouTube work together in one place.",
       "image_path": "images/IMG_1761.webp",
+      "language": "en",
       "created_at": "2025-11-20 08:58:49"
     },
     {
       "title": "China, Canada, and the Future",
       "slug": "china-canada-future",
-      "summary": "Some thoughts on the future of China and Canada in education and immigration.",
-      "body": "# China, Canada, and the Future\n\nSome thoughts on the future of education and immigration.\n\n### Key Points\n\n1. Rising competition for international students\n2. Policy uncertainty in both countries\n3. Why long-term planning still matters\n\nMore details coming soon.",
+      "summary": "Some thoughts on China, Canada, technology, culture, and a changing global landscape.",
+      "body": "# China, Canada, and the Future\n\nSome notes on technology, culture, and a changing global landscape.\n\n### Key Points\n\n1. How technology changes the way we communicate\n2. Why culture shapes how we understand the world\n3. The value of long-term thinking\n\nMore details coming soon.",
       "image_path": "images/IMG_7847.webp",
+      "language": "en",
       "created_at": "2025-11-20 08:58:49"
     }
   ],

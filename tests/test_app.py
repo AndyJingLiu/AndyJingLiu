@@ -7,14 +7,34 @@ def session_csrf(client):
 
 
 def test_public_pages_and_metadata(client):
-    for path in ["/", "/articles", "/videos", "/robots.txt", "/sitemap.xml"]:
+    response = client.get("/")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/zh/")
+    assert client.get("/articles").headers["Location"].endswith("/zh/articles")
+    assert client.get("/videos").headers["Location"].endswith("/zh/videos")
+
+    public_paths = [
+        "/zh/",
+        "/en/",
+        "/zh/articles",
+        "/en/articles",
+        "/zh/videos",
+        "/en/videos",
+        "/zh/about",
+        "/en/about",
+        "/robots.txt",
+        "/sitemap.xml",
+    ]
+    for path in public_paths:
         response = client.get(path)
         assert response.status_code == 200
 
-    homepage = client.get("/")
+    homepage = client.get("/zh/")
     assert b'<meta name="viewport"' in homepage.data
-    assert b'<link rel="canonical" href="https://andyjingliu.com/"' in homepage.data
-    assert b"Andy Jing Liu" in homepage.data
+    assert b'<link rel="canonical" href="https://andyjingliu.com/zh/"' in homepage.data
+    assert b"AndyJingLiu" in homepage.data
+    assert "这是我的个人网站".encode() in homepage.data
+    assert b'href="/en/"' in homepage.data
     assert homepage.headers["X-Content-Type-Options"] == "nosniff"
     assert "default-src 'self'" in homepage.headers["Content-Security-Policy"]
 
@@ -60,6 +80,7 @@ def test_article_creation_sanitizes_html(logged_in_client, flask_app):
         "/admin/new-article",
         data={
             "csrf_token": session_csrf(logged_in_client),
+            "language": "zh",
             "title": "Security Test",
             "summary": "A safe summary",
             "body": "# Hello\n\n<script>alert('xss')</script>\n\n**Safe text**",
@@ -72,12 +93,10 @@ def test_article_creation_sanitizes_html(logged_in_client, flask_app):
     assert b"<strong>Safe text</strong>" in response.data
 
     with sqlite3.connect(flask_app.config["DATABASE"]) as conn:
-        assert (
-            conn.execute(
-                "SELECT COUNT(*) FROM articles WHERE slug = 'security-test'"
-            ).fetchone()[0]
-            == 1
-        )
+        row = conn.execute(
+            "SELECT language FROM articles WHERE slug = 'security-test'"
+        ).fetchone()
+        assert row == ("zh",)
 
 
 def test_article_form_rejects_unsafe_image_path(logged_in_client):
@@ -85,6 +104,7 @@ def test_article_form_rejects_unsafe_image_path(logged_in_client):
         "/admin/new-article",
         data={
             "csrf_token": session_csrf(logged_in_client),
+            "language": "zh",
             "title": "Unsafe image",
             "summary": "",
             "body": "Body",
@@ -100,23 +120,27 @@ def test_social_links_can_be_saved(logged_in_client):
         "/admin/homepage",
         data={
             "csrf_token": session_csrf(logged_in_client),
-            "hero_title": "Andy Jing Liu",
+            "hero_title": "AndyJingLiu",
             "hero_subtitle": "Insights and analysis",
-            "hero_image_path": "images/IMG_1761.webp",
             "about_title": "About Andy",
             "about_body": "About text",
+            "hero_title_zh": "AndyJingLiu",
+            "hero_subtitle_zh": "我的个人网站",
+            "about_title_zh": "关于我",
+            "about_body_zh": "这里收录我的文章和视频。",
+            "hero_image_path": "images/IMG_1761.webp",
             "x_url": "https://x.com/andy",
             "youtube_url": "https://www.youtube.com/@andy",
         },
         follow_redirects=True,
     )
     assert response.status_code == 200
-    assert b"Follow on X" in response.data
-    assert b"Watch on YouTube" in response.data
+    assert "关注我的 X".encode() in response.data
+    assert "访问 YouTube 频道".encode() in response.data
 
 
 def test_unknown_page_returns_custom_404(client):
-    response = client.get("/not-a-real-page")
+    response = client.get("/not-a-real-page", follow_redirects=True)
     assert response.status_code == 404
     assert b"Page Not Found" in response.data
 

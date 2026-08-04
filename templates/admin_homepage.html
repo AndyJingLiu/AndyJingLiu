@@ -7,22 +7,35 @@
   <form method="post" class="article-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-    <h2 class="form-section-heading">Hero</h2>
+    <h2 class="form-section-heading">中文首页</h2>
+    <label for="hero_title_zh">首页标题</label>
+    <input type="text" id="hero_title_zh" name="hero_title_zh" value="{{ homepage.hero_title_zh or '' }}" maxlength="200" required />
+
+    <label for="hero_subtitle_zh">首页简介</label>
+    <input type="text" id="hero_subtitle_zh" name="hero_subtitle_zh" value="{{ homepage.hero_subtitle_zh or '' }}" maxlength="300" required />
+
+    <label for="about_title_zh">关于标题</label>
+    <input type="text" id="about_title_zh" name="about_title_zh" value="{{ homepage.about_title_zh or '' }}" maxlength="200" required />
+
+    <label for="about_body_zh">关于内容</label>
+    <textarea id="about_body_zh" name="about_body_zh" rows="5" maxlength="2000" required>{{ homepage.about_body_zh or '' }}</textarea>
+
+    <h2 class="form-section-heading">English homepage</h2>
     <label for="hero_title">Hero title</label>
     <input type="text" id="hero_title" name="hero_title" value="{{ homepage.hero_title or '' }}" maxlength="200" required />
 
     <label for="hero_subtitle">Hero subtitle</label>
     <input type="text" id="hero_subtitle" name="hero_subtitle" value="{{ homepage.hero_subtitle or '' }}" maxlength="300" required />
 
-    <label for="hero_image_path">Hero image path</label>
-    <input type="text" id="hero_image_path" name="hero_image_path" value="{{ homepage.hero_image_path or '' }}" placeholder="images/portrait.webp" />
-
-    <h2 class="form-section-heading">About</h2>
     <label for="about_title">About section title</label>
     <input type="text" id="about_title" name="about_title" value="{{ homepage.about_title or '' }}" maxlength="200" required />
 
     <label for="about_body">About section text</label>
     <textarea id="about_body" name="about_body" rows="5" maxlength="2000" required>{{ homepage.about_body or '' }}</textarea>
+
+    <h2 class="form-section-heading">Shared profile</h2>
+    <label for="hero_image_path">Hero image path</label>
+    <input type="text" id="hero_image_path" name="hero_image_path" value="{{ homepage.hero_image_path or '' }}" placeholder="images/portrait.webp" />
 
     <h2 class="form-section-heading">Social profiles</h2>
     <label for="x_url">X profile URL</label>

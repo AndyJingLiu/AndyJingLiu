@@ -112,7 +112,69 @@ ALLOWED_MARKDOWN_TAGS = {
 ALLOWED_IMAGE_EXTENSIONS = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"}
 LOGIN_WINDOW_SECONDS = 15 * 60
 LOGIN_MAX_ATTEMPTS = 5
+SUPPORTED_LOCALES = {"zh", "en"}
 login_attempts: dict[str, list[float]] = {}
+
+UI_COPY = {
+    "zh": {
+        "nav_articles": "文章",
+        "nav_videos": "视频",
+        "nav_about": "关于我",
+        "language_label": "EN",
+        "hero_kicker": "个人主页 · 文章 · 视频",
+        "x_cta": "关注我的 X",
+        "youtube_cta": "访问 YouTube 频道",
+        "about_kicker": "关于 Andy",
+        "about_link": "进一步了解我",
+        "latest_articles": "最新文章",
+        "all_articles": "查看全部文章",
+        "latest_videos": "最新视频",
+        "all_videos": "查看全部视频",
+        "articles_title": "文章",
+        "articles_intro": "这里收录我的长期写作、观察与思考。",
+        "videos_title": "视频",
+        "videos_intro": "在这里观看我的最新视频，也可以前往 YouTube 订阅频道。",
+        "about_title": "关于我",
+        "empty_articles": "中文文章正在准备中。",
+        "empty_videos": "视频内容正在准备中。",
+        "watch_youtube": "在 YouTube 观看",
+        "back_articles": "返回文章列表",
+        "social_title": "在更多平台找到我",
+        "social_body": "通过 X 关注我的最新动态，或在 YouTube 观看完整视频。",
+        "featured": "最新发布",
+    },
+    "en": {
+        "nav_articles": "Articles",
+        "nav_videos": "Videos",
+        "nav_about": "About",
+        "language_label": "中文",
+        "hero_kicker": "Personal site · Writing · Video",
+        "x_cta": "Follow on X",
+        "youtube_cta": "Visit my YouTube channel",
+        "about_kicker": "About Andy",
+        "about_link": "More about me",
+        "latest_articles": "Latest articles",
+        "all_articles": "View all articles",
+        "latest_videos": "Latest videos",
+        "all_videos": "View all videos",
+        "articles_title": "Articles",
+        "articles_intro": (
+            "Long-form writing, observations, and ideas from AndyJingLiu."
+        ),
+        "videos_title": "Videos",
+        "videos_intro": "Watch my latest videos here or subscribe on YouTube.",
+        "about_title": "About",
+        "empty_articles": "English articles are coming soon.",
+        "empty_videos": "Videos are coming soon.",
+        "watch_youtube": "Watch on YouTube",
+        "back_articles": "Back to articles",
+        "social_title": "Find me elsewhere",
+        "social_body": (
+            "Follow my latest updates on X or watch the full videos on YouTube."
+        ),
+        "featured": "Latest release",
+    },
+}
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -133,6 +195,77 @@ def ensure_homepage_columns(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE homepage_content ADD COLUMN x_url TEXT")
     if "youtube_url" not in columns:
         conn.execute("ALTER TABLE homepage_content ADD COLUMN youtube_url TEXT")
+    localized_defaults = {
+        "hero_title_zh": "AndyJingLiu",
+        "hero_subtitle_zh": "这是我的个人网站，收录文章、思考与视频创作。",
+        "about_title_zh": "关于我",
+        "about_body_zh": (
+            "我在这里分享自己的文章、思考与视频，并把发布在 X 和 YouTube "
+            "上的内容集中到同一个独立空间。"
+        ),
+    }
+    for column, default in localized_defaults.items():
+        if column not in columns:
+            conn.execute(f"ALTER TABLE homepage_content ADD COLUMN {column} TEXT")
+        conn.execute(
+            f"UPDATE homepage_content SET {column} = ? "
+            f"WHERE {column} IS NULL OR TRIM({column}) = ''",
+            (default,),
+        )
+
+    updated_english_about = (
+        "I use this independent site to share my writing, ideas, and video work, "
+        "and to connect everything I publish on X and YouTube."
+    )
+    conn.execute(
+        """
+        UPDATE homepage_content
+        SET hero_title = ?, hero_subtitle = ?, about_body = ?
+        WHERE hero_title = 'Andy Jing Liu · Insights & Analysis'
+          AND hero_subtitle LIKE '%immigration%'
+        """,
+        (
+            "AndyJingLiu",
+            "My independent home for articles, ideas, and video work.",
+            updated_english_about,
+        ),
+    )
+
+
+def ensure_article_columns(conn: sqlite3.Connection) -> None:
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(articles)")}
+    if "language" not in columns:
+        conn.execute(
+            "ALTER TABLE articles ADD COLUMN language TEXT NOT NULL DEFAULT 'en'"
+        )
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_articles_language_created_at
+        ON articles(language, created_at DESC)
+        """)
+    updated_summary = (
+        "Some thoughts on China, Canada, technology, culture, and a changing "
+        "global landscape."
+    )
+    updated_body = """# China, Canada, and the Future
+
+Some notes on technology, culture, and a changing global landscape.
+
+### Key Points
+
+1. How technology changes the way we communicate
+2. Why culture shapes how we understand the world
+3. The value of long-term thinking
+
+More details coming soon."""
+    conn.execute(
+        """
+        UPDATE articles
+        SET summary = ?, body = ?
+        WHERE slug = 'china-canada-future'
+          AND (summary LIKE '%immigration%' OR body LIKE '%immigration%')
+        """,
+        (updated_summary, updated_body),
+    )
 
 
 def seed_database(conn: sqlite3.Connection) -> None:
@@ -146,8 +279,9 @@ def seed_database(conn: sqlite3.Connection) -> None:
         """
         INSERT OR IGNORE INTO homepage_content
             (id, hero_title, hero_subtitle, hero_image_path,
-             about_title, about_body, x_url, youtube_url)
-        VALUES (1, ?, ?, ?, ?, ?, ?, ?)
+             about_title, about_body, hero_title_zh, hero_subtitle_zh,
+             about_title_zh, about_body_zh, x_url, youtube_url)
+        VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             homepage["hero_title"],
@@ -155,6 +289,10 @@ def seed_database(conn: sqlite3.Connection) -> None:
             homepage.get("hero_image_path", ""),
             homepage["about_title"],
             homepage["about_body"],
+            homepage["hero_title_zh"],
+            homepage["hero_subtitle_zh"],
+            homepage["about_title_zh"],
+            homepage["about_body_zh"],
             homepage.get("x_url", ""),
             homepage.get("youtube_url", ""),
         ),
@@ -163,8 +301,8 @@ def seed_database(conn: sqlite3.Connection) -> None:
     conn.executemany(
         """
         INSERT OR IGNORE INTO articles
-            (title, slug, summary, body, image_path, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (title, slug, summary, body, image_path, language, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
@@ -173,6 +311,7 @@ def seed_database(conn: sqlite3.Connection) -> None:
                 article.get("summary", ""),
                 article["body"],
                 article.get("image_path", ""),
+                article.get("language", "en"),
                 article.get("created_at"),
             )
             for article in seed.get("articles", [])
@@ -198,6 +337,7 @@ def init_db(seed: bool | None = None) -> None:
         ).fetchone()
         conn.executescript(schema_path.read_text(encoding="utf-8"))
         ensure_homepage_columns(conn)
+        ensure_article_columns(conn)
         if seed is True or (seed is None and initialized is None):
             seed_database(conn)
         conn.commit()
@@ -298,6 +438,8 @@ def validate_article_form(form_data: dict[str, str]) -> str | None:
         return "Article body is too long."
     if not validate_image_path(form_data["image_path"]):
         return "Image path must point to an image inside static/images."
+    if form_data.get("language") not in SUPPORTED_LOCALES:
+        return "Article language must be Chinese or English."
     return None
 
 
@@ -369,8 +511,32 @@ def static_asset_url(filename: str) -> str:
     return url_for("static", filename=filename, v=version)
 
 
+def public_locale() -> str:
+    first_segment = request.path.strip("/").split("/", 1)[0]
+    return first_segment if first_segment in SUPPORTED_LOCALES else "zh"
+
+
+def localized_home_content(row: sqlite3.Row, locale: str) -> dict[str, str]:
+    if locale == "zh":
+        return {
+            "hero_title": row["hero_title_zh"] or row["hero_title"],
+            "hero_subtitle": row["hero_subtitle_zh"] or row["hero_subtitle"],
+            "hero_image_path": row["hero_image_path"] or "",
+            "about_title": row["about_title_zh"] or row["about_title"],
+            "about_body": row["about_body_zh"] or row["about_body"],
+        }
+    return {
+        "hero_title": row["hero_title"] or row["hero_title_zh"],
+        "hero_subtitle": row["hero_subtitle"] or row["hero_subtitle_zh"],
+        "hero_image_path": row["hero_image_path"] or "",
+        "about_title": row["about_title"] or row["about_title_zh"],
+        "about_body": row["about_body"] or row["about_body_zh"],
+    }
+
+
 @app.context_processor
 def inject_site_context() -> dict[str, object]:
+    locale = public_locale()
     site_url = app.config["SITE_URL"] or request.url_root.rstrip("/")
     canonical_url = urljoin(f"{site_url}/", request.path.lstrip("/"))
     social_links = {"x_url": "", "youtube_url": ""}
@@ -389,6 +555,8 @@ def inject_site_context() -> dict[str, object]:
     return {
         "admin_logged_in": admin_is_authenticated(),
         "canonical_url": canonical_url,
+        "locale": locale,
+        "ui": UI_COPY[locale],
         "social_links": social_links,
         "site_url": site_url,
         "current_year": datetime.now().year,
@@ -435,6 +603,8 @@ def nice_date(value):
         return ""
     try:
         dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        if public_locale() == "zh":
+            return f"{dt.year}年{dt.month}月{dt.day}日"
         return dt.strftime("%b %d, %Y")
     except ValueError:
         return value
@@ -442,39 +612,82 @@ def nice_date(value):
 
 @app.route("/")
 def homepage():
+    return redirect(url_for("homepage_localized", locale="zh"))
+
+
+def require_locale(locale: str) -> str:
+    if locale not in SUPPORTED_LOCALES:
+        abort(404)
+    return locale
+
+
+@app.route("/<locale>/")
+def homepage_localized(locale):
+    locale = require_locale(locale)
     with closing(get_db_connection()) as conn:
-        home_content = conn.execute(
+        home_row = conn.execute(
             "SELECT * FROM homepage_content WHERE id = 1"
         ).fetchone()
         articles = conn.execute(
-            "SELECT * FROM articles ORDER BY created_at DESC LIMIT 4"
+            """
+            SELECT * FROM articles
+            WHERE language = ?
+            ORDER BY created_at DESC
+            LIMIT 4
+            """,
+            (locale,),
         ).fetchall()
         videos = conn.execute(
             "SELECT * FROM videos ORDER BY id DESC LIMIT 4"
         ).fetchall()
+    home_content = localized_home_content(home_row, locale)
+    meta_description = home_content["hero_subtitle"]
+    meta_title = (
+        "AndyJingLiu · 文章、思考与视频"
+        if locale == "zh"
+        else "AndyJingLiu · Writing, ideas, and video"
+    )
     return render_template(
         "homepage.html",
         home_content=home_content,
         articles=articles,
         videos=videos,
-        meta_title="Andy Jing Liu · Insights & Analysis",
-        meta_description=(home_content["hero_subtitle"] if home_content else ""),
+        alternate_url=url_for(
+            "homepage_localized", locale="en" if locale == "zh" else "zh"
+        ),
+        meta_title=meta_title,
+        meta_description=meta_description,
     )
 
 
 @app.route("/articles")
 def articles():
+    return redirect(url_for("articles_localized", locale="zh"))
+
+
+@app.route("/<locale>/articles")
+def articles_localized(locale):
+    locale = require_locale(locale)
     with closing(get_db_connection()) as conn:
-        article_rows = conn.execute("""
-            SELECT id, title, summary, slug, image_path, created_at
+        article_rows = conn.execute(
+            """
+            SELECT id, title, summary, slug, image_path, language, created_at
             FROM articles
+            WHERE language = ?
             ORDER BY created_at DESC
-            """).fetchall()
+            """,
+            (locale,),
+        ).fetchall()
     return render_template(
         "articles.html",
         articles=article_rows,
-        meta_title="Articles · Andy Jing Liu",
-        meta_description="Long-form articles and commentary by Andy Jing Liu.",
+        alternate_url=url_for(
+            "articles_localized", locale="en" if locale == "zh" else "zh"
+        ),
+        meta_title=(
+            "文章 · AndyJingLiu" if locale == "zh" else "Articles · AndyJingLiu"
+        ),
+        meta_description=UI_COPY[locale]["articles_intro"],
     )
 
 
@@ -482,7 +695,21 @@ def articles():
 def article_detail(slug):
     with closing(get_db_connection()) as conn:
         article = conn.execute(
-            "SELECT * FROM articles WHERE slug = ?", (slug,)
+            "SELECT slug, language FROM articles WHERE slug = ?", (slug,)
+        ).fetchone()
+    if article is None:
+        abort(404)
+    return redirect(
+        url_for("article_detail_localized", locale=article["language"], slug=slug)
+    )
+
+
+@app.route("/<locale>/articles/<slug>")
+def article_detail_localized(locale, slug):
+    locale = require_locale(locale)
+    with closing(get_db_connection()) as conn:
+        article = conn.execute(
+            "SELECT * FROM articles WHERE slug = ? AND language = ?", (slug, locale)
         ).fetchone()
     if article is None:
         abort(404)
@@ -498,7 +725,10 @@ def article_detail(slug):
         "article_detail.html",
         article=article,
         body_html=body_html,
-        meta_title=f"{article['title']} · Andy Jing Liu",
+        alternate_url=url_for(
+            "articles_localized", locale="en" if locale == "zh" else "zh"
+        ),
+        meta_title=f"{article['title']} · AndyJingLiu",
         meta_description=article["summary"] or auto_summary(article["body"]),
         og_image=og_image,
     )
@@ -506,6 +736,12 @@ def article_detail(slug):
 
 @app.route("/videos")
 def videos():
+    return redirect(url_for("videos_localized", locale="zh"))
+
+
+@app.route("/<locale>/videos")
+def videos_localized(locale):
+    locale = require_locale(locale)
     with closing(get_db_connection()) as conn:
         video_rows = conn.execute(
             "SELECT id, title, youtube_id, description FROM videos ORDER BY id DESC"
@@ -513,8 +749,32 @@ def videos():
     return render_template(
         "videos.html",
         videos=video_rows,
-        meta_title="Videos · Andy Jing Liu",
-        meta_description="Videos and visual explainers from Andy Jing Liu.",
+        alternate_url=url_for(
+            "videos_localized", locale="en" if locale == "zh" else "zh"
+        ),
+        meta_title=("视频 · AndyJingLiu" if locale == "zh" else "Videos · AndyJingLiu"),
+        meta_description=UI_COPY[locale]["videos_intro"],
+    )
+
+
+@app.route("/<locale>/about")
+def about_localized(locale):
+    locale = require_locale(locale)
+    with closing(get_db_connection()) as conn:
+        home_row = conn.execute(
+            "SELECT * FROM homepage_content WHERE id = 1"
+        ).fetchone()
+    home_content = localized_home_content(home_row, locale)
+    return render_template(
+        "about.html",
+        home_content=home_content,
+        alternate_url=url_for(
+            "about_localized", locale="en" if locale == "zh" else "zh"
+        ),
+        meta_title=(
+            "关于我 · AndyJingLiu" if locale == "zh" else "About · AndyJingLiu"
+        ),
+        meta_description=home_content["about_body"],
     )
 
 
@@ -557,7 +817,7 @@ def admin_login():
         error=error,
         configured=configured,
         next_url=next_url or "",
-        meta_title="Admin Login · Andy Jing Liu",
+        meta_title="Admin Login · AndyJingLiu",
         meta_robots="noindex, nofollow",
     )
 
@@ -566,7 +826,7 @@ def admin_login():
 @login_required
 def admin_logout():
     session.clear()
-    return redirect(url_for("homepage"))
+    return redirect(url_for("homepage_localized", locale="zh"))
 
 
 @app.route("/admin")
@@ -574,7 +834,7 @@ def admin_logout():
 def admin_dashboard():
     with closing(get_db_connection()) as conn:
         article_rows = conn.execute("""
-            SELECT id, title, created_at
+            SELECT id, title, language, created_at
             FROM articles
             ORDER BY created_at DESC
             LIMIT 5
@@ -586,7 +846,7 @@ def admin_dashboard():
         "admin_dashboard.html",
         articles=article_rows,
         videos=video_rows,
-        meta_title="Admin Dashboard · Andy Jing Liu",
+        meta_title="Admin Dashboard · AndyJingLiu",
         meta_robots="noindex, nofollow",
     )
 
@@ -603,12 +863,25 @@ def admin_homepage():
                 "hero_image_path": request.form.get("hero_image_path", "").strip(),
                 "about_title": request.form.get("about_title", "").strip(),
                 "about_body": request.form.get("about_body", "").strip(),
+                "hero_title_zh": request.form.get("hero_title_zh", "").strip(),
+                "hero_subtitle_zh": request.form.get("hero_subtitle_zh", "").strip(),
+                "about_title_zh": request.form.get("about_title_zh", "").strip(),
+                "about_body_zh": request.form.get("about_body_zh", "").strip(),
                 "x_url": request.form.get("x_url", "").strip(),
                 "youtube_url": request.form.get("youtube_url", "").strip(),
             }
             if not all(
                 form_data[key]
-                for key in ("hero_title", "hero_subtitle", "about_title", "about_body")
+                for key in (
+                    "hero_title",
+                    "hero_subtitle",
+                    "about_title",
+                    "about_body",
+                    "hero_title_zh",
+                    "hero_subtitle_zh",
+                    "about_title_zh",
+                    "about_body_zh",
+                )
             ):
                 error = "Hero and about text fields are required."
             elif not validate_image_path(form_data["hero_image_path"]):
@@ -624,14 +897,16 @@ def admin_homepage():
                     """
                     UPDATE homepage_content
                     SET hero_title = ?, hero_subtitle = ?, hero_image_path = ?,
-                        about_title = ?, about_body = ?, x_url = ?, youtube_url = ?
+                        about_title = ?, about_body = ?, hero_title_zh = ?,
+                        hero_subtitle_zh = ?, about_title_zh = ?, about_body_zh = ?,
+                        x_url = ?, youtube_url = ?
                     WHERE id = 1
                     """,
                     tuple(form_data.values()),
                 )
                 conn.commit()
                 flash("Homepage updated.", "success")
-                return redirect(url_for("homepage"))
+                return redirect(url_for("homepage_localized", locale="zh"))
 
         homepage_row = conn.execute(
             "SELECT * FROM homepage_content WHERE id = 1"
@@ -641,7 +916,7 @@ def admin_homepage():
         "admin_homepage.html",
         homepage=homepage_row,
         error=error,
-        meta_title="Edit Homepage · Andy Jing Liu",
+        meta_title="Edit Homepage · AndyJingLiu",
         meta_robots="noindex, nofollow",
     )
 
@@ -650,6 +925,7 @@ def admin_homepage():
 @login_required
 def new_article():
     form_data = {
+        "language": "zh",
         "title": "",
         "summary": "",
         "body": "",
@@ -666,8 +942,9 @@ def new_article():
                     summary = form_data["summary"] or auto_summary(form_data["body"])
                     conn.execute(
                         """
-                        INSERT INTO articles (title, slug, summary, body, image_path)
-                        VALUES (?, ?, ?, ?, ?)
+                        INSERT INTO articles
+                            (title, slug, summary, body, image_path, language)
+                        VALUES (?, ?, ?, ?, ?, ?)
                         """,
                         (
                             form_data["title"],
@@ -675,11 +952,18 @@ def new_article():
                             summary,
                             form_data["body"],
                             form_data["image_path"],
+                            form_data["language"],
                         ),
                     )
                     conn.commit()
                 flash("Article published.", "success")
-                return redirect(url_for("article_detail", slug=slug))
+                return redirect(
+                    url_for(
+                        "article_detail_localized",
+                        locale=form_data["language"],
+                        slug=slug,
+                    )
+                )
             except sqlite3.Error:
                 app.logger.exception("Unable to create article")
                 error = "An error occurred while saving the article."
@@ -688,7 +972,7 @@ def new_article():
         "admin_new_article.html",
         error=error,
         form=form_data,
-        meta_title="New Article · Andy Jing Liu",
+        meta_title="New Article · AndyJingLiu",
         meta_robots="noindex, nofollow",
     )
 
@@ -704,6 +988,7 @@ def edit_article(article_id):
             abort(404)
 
         form_data = {
+            "language": article["language"],
             "title": article["title"],
             "summary": article["summary"] or "",
             "body": article["body"],
@@ -730,7 +1015,7 @@ def edit_article(article_id):
                             """
                             UPDATE articles
                             SET title = ?, slug = ?, summary = ?,
-                                body = ?, image_path = ?
+                                body = ?, image_path = ?, language = ?
                             WHERE id = ?
                             """,
                             (
@@ -739,12 +1024,19 @@ def edit_article(article_id):
                                 summary,
                                 form_data["body"],
                                 form_data["image_path"],
+                                form_data["language"],
                                 article_id,
                             ),
                         )
                         conn.commit()
                         flash("Article updated.", "success")
-                        return redirect(url_for("article_detail", slug=slug))
+                        return redirect(
+                            url_for(
+                                "article_detail_localized",
+                                locale=form_data["language"],
+                                slug=slug,
+                            )
+                        )
                     except sqlite3.Error:
                         app.logger.exception("Unable to update article %s", article_id)
                         error = "An error occurred while updating the article."
@@ -754,7 +1046,7 @@ def edit_article(article_id):
         error=error,
         form=form_data,
         article=article,
-        meta_title="Edit Article · Andy Jing Liu",
+        meta_title="Edit Article · AndyJingLiu",
         meta_robots="noindex, nofollow",
     )
 
@@ -790,7 +1082,7 @@ def robots_txt():
 def sitemap():
     with closing(get_db_connection()) as conn:
         article_rows = conn.execute(
-            "SELECT slug, created_at FROM articles ORDER BY created_at DESC"
+            "SELECT slug, language, created_at FROM articles ORDER BY created_at DESC"
         ).fetchall()
     return render_template("sitemap.xml", articles=article_rows), {
         "Content-Type": "application/xml; charset=utf-8"
@@ -810,7 +1102,7 @@ def bad_request(error):
         render_template(
             "400.html",
             error=error,
-            meta_title="Bad Request · Andy Jing Liu",
+            meta_title="Bad Request · AndyJingLiu",
             meta_robots="noindex, nofollow",
         ),
         400,
@@ -822,7 +1114,7 @@ def page_not_found(error):
     return (
         render_template(
             "404.html",
-            meta_title="Page Not Found · Andy Jing Liu",
+            meta_title="Page Not Found · AndyJingLiu",
             meta_robots="noindex, nofollow",
         ),
         404,
@@ -834,7 +1126,7 @@ def internal_server_error(error):
     return (
         render_template(
             "500.html",
-            meta_title="Server Error · Andy Jing Liu",
+            meta_title="Server Error · AndyJingLiu",
             meta_robots="noindex, nofollow",
         ),
         500,

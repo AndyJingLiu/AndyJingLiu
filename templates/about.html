@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="about-page">
+  <div class="about-portrait"><img src="{{ static_asset_url(home_content.hero_image_path) }}" alt="AndyJingLiu" width="1200" height="1600" /></div>
+  <div class="about-copy">
+    <p class="eyebrow">ANDYJINGLIU · {{ ui.about_title }}</p>
+    <h1>{{ home_content.about_title }}</h1>
+    <p class="about-statement">{{ home_content.about_body }}</p>
+    <div class="about-rule"></div>
+    <p>{{ '这个网站是我在互联网上的独立空间，用来整理文章、观点与视频，也让你可以在一个地方找到我的最新创作。' if locale == 'zh' else 'This site is my independent space on the internet—a place to bring my writing, ideas, and videos together.' }}</p>
+    <div class="social-links">
+      {% if social_links.x_url %}<a class="btn btn-secondary" href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">X ↗</a>{% endif %}
+      {% if social_links.youtube_url %}<a class="btn" href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube ↗</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
