@@ -8,7 +8,7 @@
 
     {% if home_content.hero_image_path %}
     <img
-      src="{{ url_for('static', filename=home_content.hero_image_path) }}"
+      src="{{ static_asset_url(home_content.hero_image_path) }}"
       alt="Portrait of Andy Jing Liu"
       class="hero-img"
       width="1200"
@@ -45,7 +45,7 @@
         {% if article.image_path %}
         <a href="{{ url_for('article_detail', slug=article.slug) }}" tabindex="-1" aria-hidden="true">
           <img
-            src="{{ url_for('static', filename=article.image_path) }}"
+            src="{{ static_asset_url(article.image_path) }}"
             alt=""
             class="thumb"
             loading="lazy"

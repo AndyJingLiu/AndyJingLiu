@@ -5,7 +5,7 @@
   {% if article.image_path %}
   <figure class="article-hero">
     <img
-      src="{{ url_for('static', filename=article.image_path) }}"
+      src="{{ static_asset_url(article.image_path) }}"
       alt="{{ article.title }}"
       width="1200"
       height="1600"

@@ -9,7 +9,7 @@
       {% if article.image_path %}
       <a href="{{ url_for('article_detail', slug=article.slug) }}" class="article-thumb-link" aria-hidden="true" tabindex="-1">
         <img
-          src="{{ url_for('static', filename=article.image_path) }}"
+          src="{{ static_asset_url(article.image_path) }}"
           alt=""
           class="article-image"
           loading="lazy"

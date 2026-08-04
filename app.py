@@ -356,6 +356,19 @@ def login_rate_limited(client_key: str) -> bool:
     return len(recent) >= LOGIN_MAX_ATTEMPTS
 
 
+def static_asset_url(filename: str) -> str:
+    """Return a cache-busted URL for a file inside the static directory."""
+    static_root = Path(app.static_folder).resolve()
+    asset_path = (static_root / filename).resolve()
+    version = None
+    try:
+        asset_path.relative_to(static_root)
+        version = asset_path.stat().st_mtime_ns
+    except (OSError, ValueError):
+        pass
+    return url_for("static", filename=filename, v=version)
+
+
 @app.context_processor
 def inject_site_context() -> dict[str, object]:
     site_url = app.config["SITE_URL"] or request.url_root.rstrip("/")
@@ -379,6 +392,7 @@ def inject_site_context() -> dict[str, object]:
         "social_links": social_links,
         "site_url": site_url,
         "current_year": datetime.now().year,
+        "static_asset_url": static_asset_url,
     }
 
 
@@ -478,7 +492,7 @@ def article_detail(slug):
     if article["image_path"]:
         og_image = urljoin(
             f"{app.config['SITE_URL'] or request.url_root.rstrip('/')}/",
-            url_for("static", filename=article["image_path"]).lstrip("/"),
+            static_asset_url(article["image_path"]).lstrip("/"),
         )
     return render_template(
         "article_detail.html",
