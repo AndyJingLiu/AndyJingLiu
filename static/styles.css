@@ -207,6 +207,7 @@ p {
   grid-column: 2;
   grid-row: 1 / span 4;
   width: 100%;
+  height: auto;
   aspect-ratio: 4 / 5;
   border-radius: 22px;
   box-shadow: 0 22px 50px rgba(23, 32, 51, 0.17);
@@ -322,6 +323,7 @@ p {
 .article-card .thumb {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
 }
@@ -421,6 +423,7 @@ p {
 .article-image {
   display: block;
   width: 220px;
+  height: auto;
   aspect-ratio: 16 / 10;
   border-radius: 12px;
   object-fit: cover;
@@ -459,7 +462,9 @@ p {
 .article-hero img {
   display: block;
   width: 100%;
+  height: auto;
   max-height: 480px;
+  aspect-ratio: 16 / 9;
   border-radius: 16px;
   object-fit: cover;
 }
