@@ -1,47 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Videos · CS50 Final{% endblock %}
 {% block content %}
-
 <div class="page">
   <h1 class="videos-title">Videos</h1>
+  <p class="page-intro">Visual explainers, conversations, and commentary.</p>
+  {% if social_links.youtube_url %}
+  <p class="channel-link"><a class="btn" href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">Visit my YouTube channel</a></p>
+  {% endif %}
 
   {% for video in videos %}
   <article class="video-card">
     <h2>{{ video.title }}</h2>
-
-    {% if video.description %}
-    <p class="video-description">{{ video.description }}</p>
-    {% endif %}
-
-    <div
-      class="video-wrapper video-lazy"
-      data-youtube-id="{{ video.youtube_id }}"
-    >
+    {% if video.description %}<p class="video-description">{{ video.description }}</p>{% endif %}
+    <div class="video-wrapper video-lazy" data-youtube-id="{{ video.youtube_id }}">
       <img
         src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg"
-        alt="{{ video.title }}"
+        alt="Thumbnail for {{ video.title }}"
         class="video-thumb"
+        loading="lazy"
       />
-      <button
-        class="video-play-button"
-        aria-label="Play video"
-      >
-        ▶
-      </button>
+      <button class="video-play-button" type="button" aria-label="Play {{ video.title }}">▶</button>
     </div>
-
     <p class="video-link">
-      <a
-        href="https://www.youtube.com/watch?v={{ video.youtube_id }}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Watch on YouTube
-      </a>
+      <a href="https://www.youtube.com/watch?v={{ video.youtube_id }}" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
     </p>
   </article>
   {% else %}
-  <p>No videos yet. Check back soon.</p>
+  <p class="empty-state">No videos yet. Check back soon.</p>
   {% endfor %}
 </div>
 {% endblock %}

@@ -1,13 +1,27 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
 # Virtual environments
-venv/
 .venv/
+venv/
 testenv/
 
-# Python cache
-__pycache__/
-
-# SQLite database
+# Runtime data and backups
 database.db
+database.db-*
+database.db.*.bak
+instance/
+*.sqlite3
 
-# VS Code settings 
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.DS_Store
 .vscode/

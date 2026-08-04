@@ -1,15 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
-
 <div class="home-container">
-
   <section class="hero">
+    <p class="eyebrow">Writing · Commentary · Video</p>
     <h1>{{ home_content.hero_title }}</h1>
-    <p>{{ home_content.hero_subtitle }}</p>
+    <p class="hero-subtitle">{{ home_content.hero_subtitle }}</p>
 
     {% if home_content.hero_image_path %}
-    <img src="{{ url_for('static', filename=home_content.hero_image_path) }}"
-         alt="{{ home_content.hero_title }}" class="hero-img" />
+    <img
+      src="{{ url_for('static', filename=home_content.hero_image_path) }}"
+      alt="Portrait of Andy Jing Liu"
+      class="hero-img"
+      width="1600"
+      height="1200"
+      fetchpriority="high"
+    />
+    {% endif %}
+
+    {% if social_links.x_url or social_links.youtube_url %}
+    <div class="social-links" aria-label="Follow Andy Jing Liu">
+      {% if social_links.x_url %}
+      <a class="btn btn-secondary" href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">Follow on X</a>
+      {% endif %}
+      {% if social_links.youtube_url %}
+      <a class="btn" href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">Watch on YouTube</a>
+      {% endif %}
+    </div>
     {% endif %}
   </section>
 
@@ -19,50 +35,57 @@
   </section>
 
   <section class="latest">
-    <h2>Latest Articles</h2>
-    
+    <div class="section-heading-row">
+      <h2>Latest Articles</h2>
+      <a href="{{ url_for('articles') }}" class="link-arrow">View all articles →</a>
+    </div>
     <div class="article-grid">
       {% for article in articles %}
       <article class="article-card">
-        <h3>
-          <a href="{{ url_for('article_detail', slug=article.slug) }}"><strong>{{ article.title }}</strong></a>
-        </h3>
-        <p>{{ article.summary }}</p>
-
         {% if article.image_path %}
-        <img src="{{ url_for('static', filename=article.image_path) }}"
-             alt="{{ article.title }}" class="thumb" />
+        <a href="{{ url_for('article_detail', slug=article.slug) }}" tabindex="-1" aria-hidden="true">
+          <img
+            src="{{ url_for('static', filename=article.image_path) }}"
+            alt=""
+            class="thumb"
+            loading="lazy"
+            width="1600"
+            height="1200"
+          />
+        </a>
         {% endif %}
+        <h3><a href="{{ url_for('article_detail', slug=article.slug) }}">{{ article.title }}</a></h3>
+        <p>{{ article.summary }}</p>
       </article>
+      {% else %}
+      <p>No articles yet.</p>
       {% endfor %}
-    </div>
-
-    <div class="see-more">
-      <a href="{{ url_for('articles') }}" class="link-arrow">View all articles →</a>
     </div>
   </section>
 
   <section class="home-section">
-    <h2>Latest Videos</h2>
-    
+    <div class="section-heading-row">
+      <h2>Latest Videos</h2>
+      <a href="{{ url_for('videos') }}" class="link-arrow">View all videos →</a>
+    </div>
     <div class="home-video-grid">
       {% for video in videos %}
       <article class="home-video-card">
         <h3>{{ video.title }}</h3>
-        
         <div class="video-wrapper video-lazy" data-youtube-id="{{ video.youtube_id }}">
-          <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg"
-               alt="{{ video.title }}" class="video-thumb" />
-          <button class="video-play-button" aria-label="Play video">▶</button>
+          <img
+            src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg"
+            alt="Thumbnail for {{ video.title }}"
+            class="video-thumb"
+            loading="lazy"
+          />
+          <button class="video-play-button" type="button" aria-label="Play {{ video.title }}">▶</button>
         </div>
       </article>
+      {% else %}
+      <p>No videos yet.</p>
       {% endfor %}
-    </div>
-
-    <div class="home-video-more">
-      <a href="{{ url_for('videos') }}" class="link-arrow">View all videos →</a>
     </div>
   </section>
 </div>
-
 {% endblock %}

@@ -1,0 +1,41 @@
+{
+  "homepage_content": {
+    "hero_title": "Andy Jing Liu · Insights & Analysis",
+    "hero_subtitle": "Bilingual commentary on China, Canada, immigration, technology, and global trends.",
+    "hero_image_path": "images/IMG_1761.webp",
+    "about_title": "About Andy",
+    "about_body": "I write long-form articles and create videos that make complex ideas easier to understand. This independent site is the home of my work across writing, X, and YouTube.",
+    "x_url": "",
+    "youtube_url": ""
+  },
+  "articles": [
+    {
+      "title": "Why I Built This Site",
+      "slug": "why-i-built-this-site",
+      "summary": "Why I created an independent home for my writing and videos.",
+      "body": "# Why I Built This Site\n\nI wanted an independent home for my writing, analysis, and videos.\n\n## Goals\n\n- Share long-form analysis\n- Explain complex ideas clearly\n- Build a direct relationship with my audience\n\nThis site brings my articles, X commentary, and YouTube work together in one place.",
+      "image_path": "images/IMG_1761.webp",
+      "created_at": "2025-11-20 08:58:49"
+    },
+    {
+      "title": "China, Canada, and the Future",
+      "slug": "china-canada-future",
+      "summary": "Some thoughts on the future of China and Canada in education and immigration.",
+      "body": "# China, Canada, and the Future\n\nSome thoughts on the future of education and immigration.\n\n### Key Points\n\n1. Rising competition for international students\n2. Policy uncertainty in both countries\n3. Why long-term planning still matters\n\nMore details coming soon.",
+      "image_path": "images/IMG_7847.webp",
+      "created_at": "2025-11-20 08:58:49"
+    }
+  ],
+  "videos": [
+    {
+      "title": "Harvard Professor Explains Algorithms in 5 Levels of Difficulty",
+      "youtube_id": "fkIvmfqX-t0",
+      "description": "Harvard Professor Explains Algorithms in 5 Levels of Difficulty."
+    },
+    {
+      "title": "Python if __name__ == __main__: Visually Explained",
+      "youtube_id": "KZpYtNtGxSU",
+      "description": "Python if __name__ == __main__: Visually Explained."
+    }
+  ]
+}

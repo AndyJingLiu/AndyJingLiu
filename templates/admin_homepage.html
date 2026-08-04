@@ -1,54 +1,37 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block content %}
-
-<div class="container">
-  <h1>Edit Homepage Content</h1>
+<div class="page">
+  <h1>Edit Homepage</h1>
+  {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
 
   <form method="post" class="article-form">
-    <h2 class="form-section-heading">Hero Section</h2>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
+    <h2 class="form-section-heading">Hero</h2>
     <label for="hero_title">Hero title</label>
-    <input
-      type="text"
-      id="hero_title"
-      name="hero_title"
-      value="{{ homepage.hero_title or '' }}"
-      required
-    />
+    <input type="text" id="hero_title" name="hero_title" value="{{ homepage.hero_title or '' }}" maxlength="200" required />
 
     <label for="hero_subtitle">Hero subtitle</label>
-    <input
-      type="text"
-      id="hero_subtitle"
-      name="hero_subtitle"
-      value="{{ homepage.hero_subtitle or '' }}"
-    />
+    <input type="text" id="hero_subtitle" name="hero_subtitle" value="{{ homepage.hero_subtitle or '' }}" maxlength="300" required />
 
-    <label for="hero_image_path"
-      >Hero image path (e.g. images/IMG_1761.JPG)</label
-    >
-    <input
-      type="text"
-      id="hero_image_path"
-      name="hero_image_path"
-      value="{{ homepage.hero_image_path or '' }}"
-    />
+    <label for="hero_image_path">Hero image path</label>
+    <input type="text" id="hero_image_path" name="hero_image_path" value="{{ homepage.hero_image_path or '' }}" placeholder="images/portrait.webp" />
 
-    <h2 class="form-section-heading">About This Site Section</h2>
-
+    <h2 class="form-section-heading">About</h2>
     <label for="about_title">About section title</label>
-    <input
-      type="text"
-      id="about_title"
-      name="about_title"
-      value="{{ homepage.about_title or '' }}"
-      required
-    />
+    <input type="text" id="about_title" name="about_title" value="{{ homepage.about_title or '' }}" maxlength="200" required />
 
     <label for="about_body">About section text</label>
-    <textarea id="about_body" name="about_body" rows="4">{{ homepage.about_body or '' }}</textarea>
+    <textarea id="about_body" name="about_body" rows="5" maxlength="2000" required>{{ homepage.about_body or '' }}</textarea>
 
-    <button type="submit" class="btn">Save homepage content</button>
+    <h2 class="form-section-heading">Social profiles</h2>
+    <label for="x_url">X profile URL</label>
+    <input type="url" id="x_url" name="x_url" value="{{ homepage.x_url or '' }}" placeholder="https://x.com/yourhandle" />
+
+    <label for="youtube_url">YouTube channel URL</label>
+    <input type="url" id="youtube_url" name="youtube_url" value="{{ homepage.youtube_url or '' }}" placeholder="https://www.youtube.com/@yourchannel" />
+
+    <button type="submit" class="btn">Save homepage</button>
   </form>
 </div>
 {% endblock %}

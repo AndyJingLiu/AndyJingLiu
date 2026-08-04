@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{{ site_url }}/</loc></url>
+  <url><loc>{{ site_url }}/articles</loc></url>
+  <url><loc>{{ site_url }}/videos</loc></url>
+  {% for article in articles %}
+  <url>
+    <loc>{{ site_url }}/articles/{{ article.slug }}</loc>
+    {% if article.created_at %}<lastmod>{{ article.created_at[:10] }}</lastmod>{% endif %}
+  </url>
+  {% endfor %}
+</urlset>

@@ -1,39 +1,32 @@
 {% extends "base.html" %}
-{% block title %}Articles{% endblock %}
 {% block content %}
-
 <div class="page">
   <h1>Articles</h1>
-
+  <p class="page-intro">Long-form writing, commentary, and ideas from Andy Jing Liu.</p>
   <ul class="article-list">
     {% for article in articles %}
     <li class="article-item">
       {% if article.image_path %}
-      <a href="{{ url_for('article_detail', slug=article.slug) }}" 
-         class="article-thumb-link" aria-hidden="true" tabindex="-1">
-        <img src="{{ url_for('static', filename=article.image_path) }}" 
-             alt="{{ article.title }}" class="article-image" />
+      <a href="{{ url_for('article_detail', slug=article.slug) }}" class="article-thumb-link" aria-hidden="true" tabindex="-1">
+        <img
+          src="{{ url_for('static', filename=article.image_path) }}"
+          alt=""
+          class="article-image"
+          loading="lazy"
+          width="1600"
+          height="1200"
+        />
       </a>
       {% endif %}
-
       <div class="article-content">
-        <h2>
-          <a href="{{ url_for('article_detail', slug=article.slug) }}"><strong>{{ article.title }}</strong></a>
-        </h2>
-
-        {% if article.created_at %}
-        <p class="article-meta">{{ article.created_at | nice_date }}</p>
-        {% endif %}
-
-        {% if article.summary %}
-        <p class="article-summary">{{ article.summary }}</p>
-        {% endif %}
+        <h2><a href="{{ url_for('article_detail', slug=article.slug) }}">{{ article.title }}</a></h2>
+        {% if article.created_at %}<p class="article-meta">{{ article.created_at | nice_date }}</p>{% endif %}
+        {% if article.summary %}<p class="article-summary">{{ article.summary }}</p>{% endif %}
       </div>
     </li>
     {% else %}
-    <p>No articles yet.</p>
+    <li class="empty-state">No articles yet.</li>
     {% endfor %}
   </ul>
 </div>
-
 {% endblock %}

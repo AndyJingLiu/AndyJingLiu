@@ -1,41 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/png"
-      href="{{ url_for('static', filename='favicon.png') }}"
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ meta_title | default("Andy Jing Liu · Insights & Analysis") }}</title>
+    <meta
+      name="description"
+      content="{{ meta_description | default('Articles, commentary, and videos by Andy Jing Liu.') }}"
     />
-    <title>{% block title%}InsightPress{% endblock%}</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
-    />
+    <meta name="robots" content="{{ meta_robots | default('index, follow') }}" />
+    <link rel="canonical" href="{{ canonical_url }}" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+    <meta property="og:site_name" content="Andy Jing Liu" />
+    <meta property="og:title" content="{{ meta_title | default('Andy Jing Liu · Insights & Analysis') }}" />
+    <meta property="og:description" content="{{ meta_description | default('Articles, commentary, and videos by Andy Jing Liu.') }}" />
+    <meta property="og:url" content="{{ canonical_url }}" />
+    {% if og_image %}<meta property="og:image" content="{{ og_image }}" />{% endif %}
+    <meta name="twitter:card" content="{% if og_image %}summary_large_image{% else %}summary{% endif %}" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
-    <nav>
-      <a href="{{ url_for('homepage') }}">Home</a>
-      <a href="{{ url_for('articles') }}">Articles</a>
-      <a href="{{ url_for('videos') }}">Videos</a>
-    </nav>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="site-brand" href="{{ url_for('homepage') }}">Andy Jing Liu</a>
+        <div class="site-nav-links">
+          <a href="{{ url_for('articles') }}">Articles</a>
+          <a href="{{ url_for('videos') }}">Videos</a>
+          {% if social_links.x_url %}
+          <a href="{{ social_links.x_url }}" target="_blank" rel="me noopener noreferrer">X</a>
+          {% endif %}
+          {% if social_links.youtube_url %}
+          <a href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube</a>
+          {% endif %}
+          {% if admin_logged_in %}
+          <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+          <form class="nav-logout-form" method="post" action="{{ url_for('admin_logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="nav-link-button">Log out</button>
+          </form>
+          {% endif %}
+        </div>
+      </nav>
+    </header>
 
     <main class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-      {% endif %} {% endwith %} 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages" aria-live="polite">
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
       {% block content %}{% endblock %}
     </main>
 
-    <footer>
-      <small>&copy; 2025 Jing Liu</small>
+    <footer class="site-footer">
+      <p>&copy; {{ current_year }} Andy Jing Liu</p>
     </footer>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
   </body>
 </html>

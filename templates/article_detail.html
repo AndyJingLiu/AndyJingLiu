@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}{{ article.title }}{% endblock %} 
+{% block og_type %}article{% endblock %}
 {% block content %}
-
 <article class="article-detail">
-  
   {% if article.image_path %}
   <figure class="article-hero">
-    <img src="{{ url_for('static', filename=article.image_path) }}"
-         alt="{{ article.title }}" />
+    <img
+      src="{{ url_for('static', filename=article.image_path) }}"
+      alt="{{ article.title }}"
+      width="1600"
+      height="1200"
+      fetchpriority="high"
+    />
   </figure>
   {% endif %}
 
   <header class="article-header">
     <h1 class="article-title">{{ article.title }}</h1>
-
     {% if article.created_at %}
     <p class="article-meta">{{ article.created_at | nice_date }}</p>
     {% endif %}
   </header>
 
-  <section class="article-body">
-    {{ body_html | safe }}
-  </section>
+  <section class="article-body">{{ body_html | safe }}</section>
 
-  <nav class="article-back">
+  <nav class="article-back" aria-label="Article actions">
     <a href="{{ url_for('articles') }}" class="link-quiet">← Back to Articles</a>
-    
+    {% if admin_logged_in %}
     <a href="{{ url_for('edit_article', article_id=article.id) }}" class="link-quiet">Edit</a>
+    {% endif %}
   </nav>
-
 </article>
 {% endblock %}

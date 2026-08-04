@@ -1,39 +1,19 @@
-{% extends "base.html" %} 
-{% block title %}Edit Article · Admin{% endblock %} 
+{% extends "base.html" %}
 {% block content %}
-
 <div class="page">
   <h1>Edit Article</h1>
-
-  {% if error %}
-  <p class="error-message">{{ error }}</p>
-  {% endif %}
-
+  {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
   <form method="post" class="article-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <label for="title">Title</label>
-    <input
-      id="title"
-      name="title"
-      type="text"
-      value="{{ form.title }}"
-      required
-    />
-
+    <input type="text" id="title" name="title" value="{{ form.title }}" maxlength="200" required />
     <label for="summary">Summary (optional)</label>
-    <textarea id="summary" name="summary" rows="4">{{ form.summary }}</textarea>
-
+    <textarea id="summary" name="summary" rows="4" maxlength="500">{{ form.summary }}</textarea>
     <label for="body">Body (Markdown)</label>
-    <textarea id="body" name="body" rows="12" required>{{ form.body }}</textarea>
-
-    <label for="image_path">Hero image path (e.g. images/IMG_1234.JPG)</label>
-    <input
-      id="image_path"
-      name="image_path"
-      type="text"
-      value="{{ form.image_path }}"
-    />
-
-    <button type="submit" class="btn">Save Changes</button>
+    <textarea id="body" name="body" rows="18" maxlength="100000" required>{{ form.body }}</textarea>
+    <label for="image_path">Hero image path</label>
+    <input type="text" id="image_path" name="image_path" value="{{ form.image_path }}" placeholder="images/article-image.webp" />
+    <button type="submit" class="btn">Save changes</button>
   </form>
 </div>
 {% endblock %}

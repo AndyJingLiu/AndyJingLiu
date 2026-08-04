@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="error-page">
+  <h1>400</h1>
+  <h2>Request could not be verified</h2>
+  <p>{{ error.description or "Please go back, refresh the page, and try again." }}</p>
+  <a href="{{ url_for('homepage') }}" class="error-home-link">← Back to homepage</a>
+</div>
+{% endblock %}
