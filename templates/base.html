@@ -20,6 +20,8 @@
     {% if og_image %}<meta property="og:image" content="{{ og_image }}" />{% endif %}
     <meta name="twitter:card" content="{% if og_image %}summary_large_image{% else %}summary{% endif %}" />
 
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ static_asset_url('fonts/source-serif-4-latin-wght-normal.woff2') }}" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ static_asset_url('fonts/inter-latin-wght-normal.woff2') }}" />
     <link rel="stylesheet" href="{{ static_asset_url('styles.css') }}" />
   </head>
   <body class="locale-{{ locale }}">
