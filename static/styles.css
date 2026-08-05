@@ -78,17 +78,26 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
 
-  /* Ink & paper. Warm, low-contrast paper; near-black ink; one accent. */
-  --paper: #fbf9f5;
-  --paper-raised: #fffdf9;
-  --paper-sunk: #f2eee6;
-  --ink: #1a1a1c;
-  --ink-2: #4a4a52;
-  --ink-3: #6f6f78;
-  --ink-4: #96959d;
-  --accent: #a63d22;
-  --accent-soft: #c26a4e;
-  --rule: rgba(26, 26, 28, 0.14);
+  /* Ink & paper — "墨蓝". A cool neutral paper (deliberately not the warm
+     ivory used before, which sat within 1-2 hex points of Anthropic's brand
+     surfaces) with a blue-black ink and a single deep blue accent. */
+  --paper: #f5f6f7;
+  --paper-raised: #ffffff;
+  --paper-sunk: #e8eaee;
+  --ink: #14181d;
+  /* Running text sits a touch lighter than headings — pure --ink over a long
+     column reads as harsh. */
+  --ink-body: #23282e;
+  /* Grey ramp is spaced so all three levels stay distinguishable AND clear
+     WCAG AA (4.5:1) against --paper — metadata and the section numbers are
+     real text, not decoration. Ratios: 7.5 / 5.6 / 4.6. */
+  --ink-2: #4a5059;
+  --ink-3: #5c636e;
+  --ink-4: #68707c;
+  --accent: #1c3f5f;
+  --accent-soft: #5b8fbd;
+  --accent-wash: rgba(28, 63, 95, 0.15);
+  --rule: rgba(20, 24, 29, 0.15);
   --danger: #9b2c1e;
   --success: #1e6b3f;
 
@@ -127,6 +136,25 @@
 
   --radius: 3px;
   --radius-lg: 4px;
+}
+
+/* Alternate palette — "森绿".
+   To try it, add data-palette="forest" to the <html> tag in base.html:
+       <html lang="{{ locale }}" data-palette="forest">
+   Remove the attribute to go back to 墨蓝. Nothing else needs to change. */
+:root[data-palette="forest"] {
+  --paper: #f1f5f0;
+  --paper-raised: #ffffff;
+  --paper-sunk: #e4eae3;
+  --ink: #161a17;
+  --ink-body: #262c28;
+  --ink-2: #4a504b;
+  --ink-3: #5c635e;
+  --ink-4: #68716a;
+  --accent: #2d5040;
+  --accent-soft: #6da287;
+  --accent-wash: rgba(45, 80, 64, 0.15);
+  --rule: rgba(22, 26, 23, 0.15);
 }
 
 /* --------------------------------------------------------------------------
@@ -234,7 +262,7 @@ hr {
 }
 
 ::selection {
-  background: rgba(166, 61, 34, 0.16);
+  background: var(--accent-wash);
 }
 
 /* --------------------------------------------------------------------------
@@ -919,7 +947,7 @@ html[lang="zh"] .video-card-copy h2 {
 .social-banner p:not(.eyebrow) {
   max-width: var(--measure);
   margin: 0;
-  color: rgba(251, 249, 245, 0.68);
+  color: rgba(255, 255, 255, 0.66);
 }
 
 /* --------------------------------------------------------------------------
@@ -1075,7 +1103,7 @@ html[lang="zh"] .article-deck {
 .article-body {
   max-width: var(--measure);
   margin: 0 auto;
-  color: #26262b;
+  color: var(--ink-body);
   font-size: var(--step-1);
   line-height: 1.72;
 }
@@ -1159,7 +1187,7 @@ html[lang="zh"] .article-body blockquote {
   padding: var(--space-5);
   border-radius: var(--radius);
   background: var(--ink);
-  color: #f2efe9;
+  color: var(--paper);
   font-size: var(--step--1);
   line-height: 1.6;
 }
