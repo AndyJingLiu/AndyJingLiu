@@ -164,6 +164,8 @@ YOUTUBE_NAMESPACES = {
     "yt": "http://www.youtube.com/xml/schemas/2015",
 }
 
+LEGACY_DEMO_VIDEO_IDS = ("fkIvmfqX-t0", "KZpYtNtGxSU")
+
 UI_COPY = {
     "zh": {
         "nav_articles": "文章",
@@ -325,6 +327,15 @@ More details coming soon."""
     )
 
 
+def remove_legacy_demo_videos(conn: sqlite3.Connection) -> None:
+    """Remove the two unrelated videos shipped with the original starter."""
+    placeholders = ", ".join("?" for _ in LEGACY_DEMO_VIDEO_IDS)
+    conn.execute(
+        f"DELETE FROM videos WHERE youtube_id IN ({placeholders})",
+        LEGACY_DEMO_VIDEO_IDS,
+    )
+
+
 def seed_database(conn: sqlite3.Connection) -> None:
     seed_path = BASE_DIR / "seed_data.json"
     if not seed_path.exists():
@@ -395,6 +406,7 @@ def init_db(seed: bool | None = None) -> None:
         conn.executescript(schema_path.read_text(encoding="utf-8"))
         ensure_homepage_columns(conn)
         ensure_article_columns(conn)
+        remove_legacy_demo_videos(conn)
         if seed is True or (seed is None and initialized is None):
             seed_database(conn)
         conn.commit()
@@ -475,6 +487,114 @@ def parse_youtube_feed(xml_data: bytes) -> list[dict[str, str]]:
     return videos
 
 
+def youtube_text(value: object) -> str:
+    """Read either of YouTube's common text object shapes."""
+    if not isinstance(value, dict):
+        return ""
+    simple_text = value.get("simpleText")
+    if isinstance(simple_text, str):
+        return simple_text.strip()
+    runs = value.get("runs")
+    if not isinstance(runs, list):
+        return ""
+    return "".join(
+        run.get("text", "")
+        for run in runs
+        if isinstance(run, dict) and isinstance(run.get("text"), str)
+    ).strip()
+
+
+def parse_youtube_channel_page(html_data: bytes) -> list[dict[str, str]]:
+    """Extract regular videos from the channel's public Videos page."""
+    html = html_data.decode("utf-8", errors="replace")
+    marker = "var ytInitialData = "
+    marker_at = html.find(marker)
+    if marker_at == -1:
+        return []
+
+    json_at = html.find("{", marker_at + len(marker))
+    if json_at == -1:
+        return []
+    try:
+        initial_data, _ = json.JSONDecoder().raw_decode(html[json_at:])
+    except json.JSONDecodeError:
+        return []
+
+    videos: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
+
+    def add_video(video_id: object, title: str) -> None:
+        if (
+            isinstance(video_id, str)
+            and re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id)
+            and video_id not in seen_ids
+            and title
+        ):
+            seen_ids.add(video_id)
+            videos.append(
+                {
+                    "title": title,
+                    "youtube_id": video_id,
+                    "description": "",
+                    "published_at": "",
+                    "watch_url": f"https://www.youtube.com/watch?v={video_id}",
+                }
+            )
+
+    def visit(value: object) -> None:
+        if len(videos) >= 15:
+            return
+        if isinstance(value, list):
+            for item in value:
+                visit(item)
+            return
+        if not isinstance(value, dict):
+            return
+
+        renderer = value.get("videoRenderer")
+        if isinstance(renderer, dict):
+            add_video(renderer.get("videoId"), youtube_text(renderer.get("title")))
+
+        lockup = value.get("lockupViewModel")
+        if (
+            isinstance(lockup, dict)
+            and lockup.get("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO"
+        ):
+            metadata = lockup.get("metadata")
+            metadata_view = (
+                metadata.get("lockupMetadataViewModel", {})
+                if isinstance(metadata, dict)
+                else {}
+            )
+            title_data = (
+                metadata_view.get("title", {})
+                if isinstance(metadata_view, dict)
+                else {}
+            )
+            title = (
+                title_data.get("content", "") if isinstance(title_data, dict) else ""
+            )
+            add_video(lockup.get("contentId"), title.strip())
+
+        for child in value.values():
+            visit(child)
+
+    visit(initial_data)
+    return videos
+
+
+def fetch_youtube_channel_page(channel_id: str) -> list[dict[str, str]]:
+    """Fetch the public Videos page when YouTube's Atom feed is unavailable."""
+    page_url = f"https://www.youtube.com/channel/{channel_id}/videos"
+    request_headers = {
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.7",
+        "User-Agent": "Mozilla/5.0 AndyJingLiu.com/1.0",
+    }
+    with urlopen(Request(page_url, headers=request_headers), timeout=8) as response:
+        return parse_youtube_channel_page(response.read())
+
+
 def fetch_youtube_videos() -> list[dict[str, str]]:
     """Fetch and briefly cache the channel's latest regular public videos."""
     channel_id = app.config["YOUTUBE_CHANNEL_ID"]
@@ -508,20 +628,22 @@ def fetch_youtube_videos() -> list[dict[str, str]]:
                 Request(feed_url, headers=request_headers), timeout=5
             ) as response:
                 videos = parse_youtube_feed(response.read())
-        except (ElementTree.ParseError, OSError, TimeoutError, URLError):
-            app.logger.warning("Unable to refresh YouTube feed", exc_info=True)
-            if youtube_feed_cache["channel_id"] == channel_id:
-                return list(youtube_feed_cache["videos"])
-            return []
+        except (ElementTree.ParseError, OSError, TimeoutError, URLError) as error:
+            app.logger.info(
+                "YouTube feed unavailable (%s); using the channel page", error
+            )
+            videos = []
 
         if not videos:
-            # The feed fetched fine but nothing survived filtering. Without
-            # this the site silently falls back and looks merely "out of date".
-            app.logger.warning(
-                "YouTube feed for %s returned no usable videos "
-                "(entries may all be Shorts, which are filtered out)",
-                channel_id,
-            )
+            try:
+                videos = fetch_youtube_channel_page(channel_id)
+            except (OSError, TimeoutError, URLError):
+                app.logger.warning(
+                    "Unable to refresh YouTube channel page", exc_info=True
+                )
+
+        if not videos and youtube_feed_cache["channel_id"] == channel_id:
+            return list(youtube_feed_cache["videos"])
 
         youtube_feed_cache.update(
             {

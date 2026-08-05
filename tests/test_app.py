@@ -1,5 +1,7 @@
+import json
 import sqlite3
 from io import BytesIO
+from urllib.error import URLError
 
 import app as project
 
@@ -69,6 +71,82 @@ def test_latest_youtube_videos_are_loaded_and_shorts_are_excluded(
     assert b"Newest regular video" in response.data
     assert b"regular1234" in response.data
     assert b"A short" not in response.data
+
+
+def test_channel_page_is_used_when_youtube_feed_is_unavailable(
+    client, flask_app, monkeypatch
+):
+    page_data = {
+        "contents": [
+            {
+                "videoRenderer": {
+                    "videoId": "realvideo01",
+                    "title": {"runs": [{"text": "A real channel video"}]},
+                }
+            },
+            {
+                "lockupViewModel": {
+                    "contentId": "newvideo001",
+                    "contentType": "LOCKUP_CONTENT_TYPE_VIDEO",
+                    "metadata": {
+                        "lockupMetadataViewModel": {
+                            "title": {"content": "A new-format channel video"}
+                        }
+                    },
+                }
+            },
+            {
+                "reelItemRenderer": {
+                    "videoId": "shortvid001",
+                    "headline": {"simpleText": "A Short"},
+                }
+            },
+        ]
+    }
+    page = (
+        "<script>var ytInitialData = " + json.dumps(page_data) + ";</script>"
+    ).encode()
+
+    def fake_urlopen(request, timeout):
+        if "feeds/videos.xml" in request.full_url:
+            raise URLError("feed unavailable")
+        assert request.full_url.endswith("/channel/UCL6USkBdRjEeOpeLo2Lq9aA/videos")
+        return BytesIO(page)
+
+    flask_app.config["YOUTUBE_CHANNEL_ID"] = "UCL6USkBdRjEeOpeLo2Lq9aA"
+    project.youtube_feed_cache.update(
+        {"channel_id": "", "expires_at": 0.0, "videos": []}
+    )
+    monkeypatch.setattr(project, "urlopen", fake_urlopen)
+
+    response = client.get("/zh/videos")
+    assert response.status_code == 200
+    assert b"A real channel video" in response.data
+    assert b"realvideo01" in response.data
+    assert b"A new-format channel video" in response.data
+    assert b"newvideo001" in response.data
+    assert b"A Short" not in response.data
+
+
+def test_database_migration_removes_only_legacy_demo_videos(flask_app):
+    with sqlite3.connect(flask_app.config["DATABASE"]) as conn:
+        conn.executemany(
+            "INSERT INTO videos (title, youtube_id, description) VALUES (?, ?, '')",
+            [
+                ("Legacy one", "fkIvmfqX-t0"),
+                ("Legacy two", "KZpYtNtGxSU"),
+                ("Andy's video", "realvideo01"),
+            ],
+        )
+
+    with flask_app.app_context():
+        project.init_db(seed=False)
+
+    with sqlite3.connect(flask_app.config["DATABASE"]) as conn:
+        remaining = conn.execute(
+            "SELECT youtube_id FROM videos ORDER BY youtube_id"
+        ).fetchall()
+    assert remaining == [("realvideo01",)]
 
 
 def test_admin_routes_require_login(client):
