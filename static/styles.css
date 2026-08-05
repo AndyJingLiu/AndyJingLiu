@@ -131,8 +131,9 @@
   --shell: 1180px;
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
   /* Left margin column holding section numbers. Every numbered section
-     hangs off this one value, so their headings share a vertical edge. */
-  --rail: 4.5rem;
+     hangs off this one value, so their headings share a vertical edge.
+     "01" renders ~16px wide, so this leaves ~24px between number and title. */
+  --rail: 2.5rem;
 
   --radius: 3px;
   --radius-lg: 4px;
@@ -692,10 +693,10 @@ html[lang="zh"] .hero-subtitle {
   border-top: 1px solid var(--rule);
 }
 
-/* Offset by the rail so the lead sits flush under the heading, not under
-   the number. */
+/* Flush to the section's left edge, matching the article and video blocks in
+   sections 02 and 03. The number hangs alone in the margin. */
 .about-preview-body {
-  margin-left: var(--rail);
+  margin-left: 0;
 }
 
 .about-lead {
@@ -1540,7 +1541,7 @@ html[lang="zh"] .about-statement {
 
 @media (max-width: 1000px) {
   :root {
-    --rail: 3.5rem;
+    --rail: 2.25rem;
   }
 
   .nav-social {
@@ -1572,7 +1573,7 @@ html[lang="zh"] .about-statement {
 @media (max-width: 720px) {
   :root {
     --gutter: 1.25rem;
-    --rail: 2.25rem;
+    --rail: 2rem;
   }
 
   /* The "see all" link drops under the heading and lines up with it. */
