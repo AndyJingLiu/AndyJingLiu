@@ -514,6 +514,15 @@ def fetch_youtube_videos() -> list[dict[str, str]]:
                 return list(youtube_feed_cache["videos"])
             return []
 
+        if not videos:
+            # The feed fetched fine but nothing survived filtering. Without
+            # this the site silently falls back and looks merely "out of date".
+            app.logger.warning(
+                "YouTube feed for %s returned no usable videos "
+                "(entries may all be Shorts, which are filtered out)",
+                channel_id,
+            )
+
         youtube_feed_cache.update(
             {
                 "channel_id": channel_id,

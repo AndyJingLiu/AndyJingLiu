@@ -1,0 +1,108 @@
+"""Diagnose why the site is not showing the channel's latest videos.
+
+Run from the project root:
+
+    .venv/bin/python tools/diagnose_youtube.py
+
+Prints nothing secret, so the output is safe to paste or screenshot.
+"""
+
+import sys
+import re
+import urllib.request
+import urllib.error
+import xml.etree.ElementTree as ElementTree
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import app as A  # noqa: E402
+
+ATOM = {"atom": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+
+
+def main() -> None:
+    channel_id = A.app.config["YOUTUBE_CHANNEL_ID"]
+    print("=" * 62)
+    print("1. 配置")
+    print(f"   YOUTUBE_CHANNEL_ID = {channel_id}")
+    print(f"   长度 = {len(channel_id)}  (应为 24)")
+
+    ok = re.fullmatch(r"UC[A-Za-z0-9_-]{22}", channel_id)
+    print(f"   通过 app.py 的格式校验 = {bool(ok)}")
+    if not ok:
+        print("\n   >>> 结论：频道 ID 格式不对，fetch_youtube_videos() 直接返回空。")
+        return
+
+    print(f"   数据库路径 = {A.app.config['DATABASE']}")
+
+    print("\n2. 抓取 RSS")
+    url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + channel_id
+    print(f"   {url}")
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/atom+xml, application/xml;q=0.9",
+                "User-Agent": "AndyJingLiu.com/1.0",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            status = resp.status
+            data = resp.read()
+        print(f"   HTTP {status}，收到 {len(data)} 字节")
+    except urllib.error.HTTPError as exc:
+        print(f"   >>> HTTP 错误 {exc.code}：feed 取不到。频道 ID 可能不对，或频道无公开视频。")
+        return
+    except Exception as exc:  # noqa: BLE001
+        print(f"   >>> 网络失败：{type(exc).__name__}: {exc}")
+        print("   >>> 这台机器到 youtube.com 的出口被挡了（代理/防火墙/DNS）。")
+        return
+
+    print("\n3. 解析 feed")
+    try:
+        root = ElementTree.fromstring(data)
+    except ElementTree.ParseError as exc:
+        print(f"   >>> XML 解析失败：{exc}")
+        return
+
+    print(f"   feed 标题 = {root.findtext('atom:title', namespaces=ATOM)}")
+    entries = root.findall("atom:entry", ATOM)
+    print(f"   条目总数 = {len(entries)}")
+
+    if entries:
+        print("\n   逐条（看 URL 里有没有 /shorts/）：")
+        for entry in entries[:15]:
+            title = entry.findtext("atom:title", default="", namespaces=ATOM)
+            link = entry.find("atom:link[@rel='alternate']", ATOM)
+            href = link.get("href", "") if link is not None else ""
+            mark = "SHORT" if "/shorts/" in href else "  ok "
+            print(f"     [{mark}] {title[:44]:46s} {href}")
+
+    print("\n4. 过 app.py 自己的过滤器")
+    parsed = A.parse_youtube_feed(data)
+    print(f"   parse_youtube_feed() 返回 {len(parsed)} 条")
+
+    print("\n5. 站点实际会显示什么")
+    A.youtube_feed_cache.update({"channel_id": "", "expires_at": 0, "videos": []})
+    shown = A.latest_videos(5)
+    print(f"   latest_videos(5) 返回 {len(shown)} 条")
+    for video in shown:
+        print(f"     - {video['title'][:60]}")
+
+    print("\n" + "=" * 62)
+    print("结论")
+    if not entries:
+        print("  feed 本身是空的 —— 频道没有 RSS 可见的公开视频。")
+    elif entries and not parsed:
+        print("  你的视频全部被 Shorts 过滤器滤掉了。")
+        print("  修法：放宽 parse_youtube_feed() 里的 '/shorts/' 判断。")
+    elif parsed and not shown:
+        print("  解析出来了但站点没显示 —— latest_videos() 逻辑有问题。")
+    else:
+        print("  抓取链路正常。如果页面上还是旧内容，是 15 分钟的进程内缓存")
+        print("  (YOUTUBE_FEED_CACHE_SECONDS=900)，重启 app 即可。")
+
+
+if __name__ == "__main__":
+    main()
