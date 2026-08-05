@@ -121,6 +121,9 @@
 
   --shell: 1180px;
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  /* Left margin column holding section numbers. Every numbered section
+     hangs off this one value, so their headings share a vertical edge. */
+  --rail: 4.5rem;
 
   --radius: 3px;
   --radius-lg: 4px;
@@ -555,23 +558,22 @@ html[lang="zh"] .article-meta {
   border-top: 1px solid var(--rule);
 }
 
-/* A heading row: index number, title, and an aligned "see all" link. */
+/* A heading row: number in the rail, title, and a trailing "see all" link.
+   Baseline alignment (not box-top) is what makes the number sit on the same
+   line as a heading many times its size. */
 .section-heading-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) auto;
   align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-6);
+  column-gap: 0;
   margin-bottom: var(--space-7);
 }
 
-.section-heading-row > div {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-5);
+.section-heading-row > .text-link {
+  margin-left: var(--space-6);
 }
 
-.section-heading-row h2,
-.about-preview h2 {
+.section-heading-row h2 {
   margin: 0;
   font-size: var(--step-4);
 }
@@ -657,12 +659,15 @@ html[lang="zh"] .hero-subtitle {
    -------------------------------------------------------------------------- */
 
 .about-preview {
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 0.62fr) minmax(0, 1fr);
-  gap: var(--space-6) clamp(2rem, 5vw, 4.5rem);
   margin-top: var(--space-9);
   padding-top: var(--space-9);
   border-top: 1px solid var(--rule);
+}
+
+/* Offset by the rail so the lead sits flush under the heading, not under
+   the number. */
+.about-preview-body {
+  margin-left: var(--rail);
 }
 
 .about-lead {
@@ -1506,6 +1511,10 @@ html[lang="zh"] .about-statement {
    -------------------------------------------------------------------------- */
 
 @media (max-width: 1000px) {
+  :root {
+    --rail: 3.5rem;
+  }
+
   .nav-social {
     display: none;
   }
@@ -1516,14 +1525,6 @@ html[lang="zh"] .about-statement {
 
   .article-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .about-preview {
-    grid-template-columns: 2.5rem minmax(0, 1fr);
-  }
-
-  .about-preview > div:last-child {
-    grid-column: 2;
   }
 
   .article-row {
@@ -1543,6 +1544,19 @@ html[lang="zh"] .about-statement {
 @media (max-width: 720px) {
   :root {
     --gutter: 1.25rem;
+    --rail: 2.25rem;
+  }
+
+  /* The "see all" link drops under the heading and lines up with it. */
+  .section-heading-row {
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    row-gap: var(--space-4);
+  }
+
+  .section-heading-row > .text-link {
+    grid-column: 2;
+    justify-self: start;
+    margin-left: 0;
   }
 
   body {
@@ -1611,27 +1625,12 @@ html[lang="zh"] .about-statement {
     text-align: left;
   }
 
-  .about-preview {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-4);
-  }
-
-  .about-preview > div:last-child {
-    grid-column: 1;
-  }
-
-  .section-heading-row,
   .page-header-with-action,
   .social-banner,
   .footer-inner {
     align-items: flex-start;
     flex-direction: column;
     gap: var(--space-5);
-  }
-
-  .section-heading-row > div {
-    align-items: baseline;
-    gap: var(--space-4);
   }
 
   .article-grid,
