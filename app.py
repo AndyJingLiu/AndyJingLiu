@@ -93,6 +93,33 @@ if env_bool("TRUST_PROXY", APP_ENV == "production"):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 
+def warn_about_missing_config() -> None:
+    """Say out loud when the app is running on built-in defaults.
+
+    Without this the app starts up looking healthy while the admin login is
+    unusable and sessions are dropped on every restart, which is impossible to
+    diagnose from the outside.
+    """
+    if not (BASE_DIR / ".env").exists():
+        app.logger.warning(
+            "No .env file found — running on the defaults baked into app.py. "
+            "Copy .env.example to .env and fill it in."
+        )
+    if not app.config["ADMIN_USERNAME"] or not app.config["ADMIN_PASSWORD_HASH"]:
+        app.logger.warning(
+            "ADMIN_USERNAME / ADMIN_PASSWORD_HASH are unset — admin login is "
+            "disabled. Generate a hash with: flask hash-password"
+        )
+    if not secret_key:
+        app.logger.warning(
+            "SECRET_KEY is unset — a random one is generated per start, so every "
+            "restart logs you out."
+        )
+
+
+warn_about_missing_config()
+
+
 ALLOWED_MARKDOWN_TAGS = {
     "a",
     "blockquote",

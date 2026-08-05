@@ -32,16 +32,5 @@
       "created_at": "2025-11-20 08:58:49"
     }
   ],
-  "videos": [
-    {
-      "title": "Harvard Professor Explains Algorithms in 5 Levels of Difficulty",
-      "youtube_id": "fkIvmfqX-t0",
-      "description": "Harvard Professor Explains Algorithms in 5 Levels of Difficulty."
-    },
-    {
-      "title": "Python if __name__ == __main__: Visually Explained",
-      "youtube_id": "KZpYtNtGxSU",
-      "description": "Python if __name__ == __main__: Visually Explained."
-    }
-  ]
+  "videos": []
 }
