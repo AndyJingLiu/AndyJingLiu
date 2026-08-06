@@ -632,19 +632,13 @@ html[lang="zh"] .article-meta {
   gap: var(--space-6);
 }
 
-/* The identity block is a flex item, so it shrink-wraps to its widest line —
-   the brand. Centring text inside a box that is already exactly as wide as its
-   longest line does almost nothing: it shifted the tagline about 25px and read
-   as no change at all. The min-width gives the centring something to work
-   against. */
 .footer-identity {
-  min-width: 15rem;
-  text-align: center;
+  text-align: left;
 }
 
 .footer-inner p {
   max-width: 32ch;
-  margin: var(--space-2) auto 0;
+  margin: var(--space-2) 0 0;
   color: var(--ink-3);
   font-size: var(--step--1);
 }
