@@ -1,6 +1,9 @@
+import hashlib
 import hmac
 import json
+import math
 import os
+import random
 import re
 import secrets
 import sqlite3
@@ -193,6 +196,8 @@ UI_COPY = {
         "social_title": "在更多平台找到我",
         "social_body": "通过 X 关注我的最新动态，或在 YouTube 观看完整视频。",
         "featured": "最新发布",
+        "colophon": "西文 Source Serif 4 与 Inter，中文 PingFang。由 Flask 构建，自行托管。",
+        "seal_label": "刘的印章",
     },
     "en": {
         "nav_articles": "Articles",
@@ -224,6 +229,11 @@ UI_COPY = {
             "Follow my latest updates on X or watch the full videos on YouTube."
         ),
         "featured": "Latest release",
+        "colophon": (
+            "Set in Source Serif 4 and Inter, with PingFang for Chinese. "
+            "Built with Flask and self-hosted."
+        ),
+        "seal_label": "Seal of Liu",
     },
 }
 
@@ -813,6 +823,197 @@ def static_asset_url(filename: str) -> str:
     return url_for("static", filename=filename, v=version)
 
 
+# ---------------------------------------------------------------------------
+# Generated article covers
+#
+# Every article gets a cover whether or not one was uploaded. The artwork is a
+# deterministic function of the slug, so a given article always looks the same,
+# nothing is stored on disk, and a new post is never published bare. The four
+# compositions are line work only — concentric arcs, a ruled field, nested
+# rectangles, a fan — in the site's own blue with a single vermilion element,
+# echoing the seal. The background is left transparent so the surrounding
+# --paper-sunk shows through and the covers follow light and dark mode without
+# needing a second version.
+# ---------------------------------------------------------------------------
+
+COVER_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+COVER_WIDTH = 1000
+COVER_HEIGHT = 800
+COVER_BLUE = "#5c8db3"
+COVER_VERMILION = "#b0483a"
+# Stroke weights are in viewBox units. A card renders the cover about 360px
+# wide, so the viewBox is scaled down roughly 2.8x and a nominal 2.8 lands at
+# about one device pixel — thin, but still a line rather than a rumour. The
+# earlier 1.1 disappeared entirely at card size.
+COVER_HAIRLINE = 2.8
+COVER_ACCENT_LINE = 6.5
+# Long enough to cross the frame from any origin the compositions can pick.
+COVER_REACH = 2200.0
+
+
+def _cover_rng(slug: str) -> random.Random:
+    digest = hashlib.sha256(slug.encode("utf-8")).digest()
+    return random.Random(int.from_bytes(digest[:8], "big"))
+
+
+def _cover_accent_index(rng: random.Random, count: int) -> int:
+    """Pick which element is vermilion, from the middle half of the set.
+
+    Every composition runs off the frame, so an accent drawn from the ends
+    often landed outside the crop and the cover came back all blue. The middle
+    half is reliably inside the frame.
+    """
+    low = count // 4
+    high = max(low + 1, count - count // 4)
+    return rng.randrange(low, high)
+
+
+def _cover_stroke(index: int, accent_at: int) -> tuple[str, float]:
+    if index == accent_at:
+        return COVER_VERMILION, COVER_ACCENT_LINE
+    return COVER_BLUE, COVER_HAIRLINE
+
+
+def _cover_arcs(rng: random.Random) -> list[str]:
+    # The centre is allowed outside the frame, but the ring stack always
+    # reaches past the far corner, so no crop can come back empty.
+    cx = rng.uniform(-0.25, 0.75) * COVER_WIDTH
+    cy = rng.uniform(-0.15, 1.15) * COVER_HEIGHT
+    count = rng.randint(13, 20)
+    reach = math.hypot(
+        max(abs(cx), abs(COVER_WIDTH - cx)), max(abs(cy), abs(COVER_HEIGHT - cy))
+    )
+    step = reach / count
+    accent_at = _cover_accent_index(rng, count)
+    shapes = []
+    for index in range(count):
+        stroke, width = _cover_stroke(index, accent_at)
+        radius = step * (index + 1)
+        shapes.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" '
+            f'fill="none" stroke="{stroke}" stroke-width="{width}"/>'
+        )
+    return shapes
+
+
+def _cover_rules(rng: random.Random) -> list[str]:
+    angle = rng.uniform(-78, 78)
+    count = rng.randint(14, 26)
+    accent_at = _cover_accent_index(rng, count)
+    span = 1800.0
+    gap = span / count
+    lines = []
+    for index in range(count):
+        stroke, width = _cover_stroke(index, accent_at)
+        x = -span / 2 + gap * index + rng.uniform(-gap * 0.22, gap * 0.22)
+        lines.append(
+            f'<line x1="{x:.1f}" y1="{-COVER_REACH / 2:.0f}" '
+            f'x2="{x:.1f}" y2="{COVER_REACH / 2:.0f}" '
+            f'stroke="{stroke}" stroke-width="{width}"/>'
+        )
+    group = "".join(lines)
+    return [
+        f'<g transform="translate({COVER_WIDTH / 2:.0f} {COVER_HEIGHT / 2:.0f}) '
+        f'rotate({angle:.1f})">{group}</g>'
+    ]
+
+
+def _cover_nested(rng: random.Random) -> list[str]:
+    count = rng.randint(12, 20)
+    # A strong drift is what keeps this from reading as a bullseye.
+    drift_x = rng.choice([-1, 1]) * rng.uniform(34, 62)
+    drift_y = rng.choice([-1, 1]) * rng.uniform(26, 50)
+    accent_at = _cover_accent_index(rng, count)
+    # The outermost rectangles run off the frame, so the composition is a crop
+    # of something larger rather than a diagram centred in a box.
+    base_w, base_h = 1500.0, 1200.0
+    shapes = []
+    for index in range(count):
+        stroke, width = _cover_stroke(index, accent_at)
+        w = base_w - index * (base_w / (count + 1))
+        h = base_h - index * (base_h / (count + 1))
+        x = COVER_WIDTH / 2 + drift_x * index - w / 2
+        y = COVER_HEIGHT / 2 + drift_y * index - h / 2
+        shapes.append(
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" '
+            f'fill="none" stroke="{stroke}" stroke-width="{width}"/>'
+        )
+    return shapes
+
+
+def _cover_fan(rng: random.Random) -> list[str]:
+    ox = rng.uniform(-0.3, 1.3) * COVER_WIDTH
+    # The vanishing point sits well outside the frame. Placed close to the edge
+    # this composition became a sunburst, which is a loud, decorative shape; at
+    # this distance the rays cross the frame almost parallel and only lean.
+    oy = rng.choice([-1, 1]) * rng.uniform(0.7, 1.6) * COVER_HEIGHT
+    if oy > 0:
+        oy += COVER_HEIGHT
+    count = rng.randint(11, 20)
+    # Aim at the middle of the frame and open symmetrically, so the fan always
+    # sweeps across rather than off into the margin.
+    aim = math.degrees(math.atan2(COVER_HEIGHT / 2 - oy, COVER_WIDTH / 2 - ox))
+    spread = rng.uniform(28, 62)
+    start = aim - spread / 2
+    accent_at = _cover_accent_index(rng, count)
+    shapes = []
+    for index in range(count):
+        stroke, width = _cover_stroke(index, accent_at)
+        theta = math.radians(start + spread * index / max(count - 1, 1))
+        x = ox + math.cos(theta) * COVER_REACH
+        y = oy + math.sin(theta) * COVER_REACH
+        shapes.append(
+            f'<line x1="{ox:.1f}" y1="{oy:.1f}" x2="{x:.1f}" y2="{y:.1f}" '
+            f'stroke="{stroke}" stroke-width="{width}"/>'
+        )
+    return shapes
+
+
+COVER_COMPOSITIONS = (_cover_arcs, _cover_rules, _cover_nested, _cover_fan)
+
+
+def render_cover_svg(slug: str) -> str:
+    rng = _cover_rng(slug)
+    compose = COVER_COMPOSITIONS[rng.randrange(len(COVER_COMPOSITIONS))]
+    shapes = "".join(compose(rng))
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {COVER_WIDTH} {COVER_HEIGHT}" '
+        f'width="{COVER_WIDTH}" height="{COVER_HEIGHT}" '
+        f'preserveAspectRatio="xMidYMid slice" role="presentation">'
+        f'<g stroke-linecap="square">{shapes}</g>'
+        f"</svg>"
+    )
+
+
+@app.route("/covers/<slug>.svg")
+def article_cover(slug: str):
+    if not COVER_SLUG_PATTERN.match(slug) or len(slug) > 120:
+        abort(404)
+    response = Response(render_cover_svg(slug), mimetype="image/svg+xml")
+    # The artwork only ever changes if the slug changes, and a changed slug is
+    # a different URL.
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
+
+
+def cover_url(article) -> str:
+    """Return an article's uploaded cover, or its generated one."""
+    try:
+        image_path = (article["image_path"] or "").strip()
+    except (KeyError, IndexError, TypeError):
+        image_path = ""
+    if image_path:
+        return static_asset_url(image_path)
+    try:
+        slug = (article["slug"] or "").strip()
+    except (KeyError, IndexError, TypeError):
+        slug = ""
+    if not COVER_SLUG_PATTERN.match(slug):
+        return ""
+    return url_for("article_cover", slug=slug)
+
+
 def public_locale() -> str:
     first_segment = request.path.strip("/").split("/", 1)[0]
     return first_segment if first_segment in SUPPORTED_LOCALES else "zh"
@@ -863,6 +1064,7 @@ def inject_site_context() -> dict[str, object]:
         "site_url": site_url,
         "current_year": datetime.now().year,
         "static_asset_url": static_asset_url,
+        "cover_url": cover_url,
     }
 
 

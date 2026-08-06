@@ -12,7 +12,8 @@
         {% if article.summary %}<p>{{ article.summary }}</p>{% endif %}
         <a class="text-link" href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}">{{ '阅读全文' if locale == 'zh' else 'Read article' }} <span>→</span></a>
       </div>
-      {% if article.image_path %}<a class="article-row-image" href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}"><img src="{{ static_asset_url(article.image_path) }}" alt="" loading="lazy" width="1200" height="1600" /></a>{% endif %}
+      {% set article_cover = cover_url(article) %}
+      {% if article_cover %}<a class="article-row-image{% if not article.image_path %} cover-generated{% endif %}" href="{{ url_for('article_detail_localized', locale=locale, slug=article.slug) }}"><img src="{{ article_cover }}" alt="" loading="lazy" width="1000" height="800" /></a>{% endif %}
     </article>
     {% else %}<div class="empty-panel"><p>{{ ui.empty_articles }}</p></div>{% endfor %}
   </div>

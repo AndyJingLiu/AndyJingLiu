@@ -4,6 +4,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)" />
     <title>{{ meta_title | default("AndyJingLiu · Personal site") }}</title>
     <meta name="description" content="{{ meta_description | default('The personal site of AndyJingLiu: articles, ideas, and videos.') }}" />
     <meta name="robots" content="{{ meta_robots | default('index, follow') }}" />
@@ -28,7 +31,7 @@
   <body class="locale-{{ locale }}">
     <header class="site-header">
       <nav class="site-nav" aria-label="{{ '主要导航' if locale == 'zh' else 'Primary navigation' }}">
-        <a class="site-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu<span>.</span></a>
+        <a class="site-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu{% include "_seal.html" %}</a>
         <div class="site-nav-links">
           <a href="{{ url_for('articles_localized', locale=locale) }}">{{ ui.nav_articles }}</a>
           <a href="{{ url_for('videos_localized', locale=locale) }}">{{ ui.nav_videos }}</a>
@@ -61,7 +64,7 @@
     <footer class="site-footer">
       <div class="footer-inner">
         <div>
-          <a class="footer-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu<span>.</span></a>
+          <a class="footer-brand" href="{{ url_for('homepage_localized', locale=locale) }}">AndyJingLiu{% include "_seal.html" %}</a>
           <p>{{ '我的独立个人网站。' if locale == 'zh' else 'My independent personal site.' }}</p>
         </div>
         <div class="footer-links">
@@ -71,7 +74,10 @@
           {% if social_links.youtube_url %}<a href="{{ social_links.youtube_url }}" target="_blank" rel="me noopener noreferrer">YouTube</a>{% endif %}
         </div>
       </div>
-      <p class="copyright">&copy; {{ current_year }} AndyJingLiu</p>
+      <div class="footer-baseline">
+        <p class="copyright">&copy; {{ current_year }} AndyJingLiu</p>
+        <p class="colophon">{{ ui.colophon }}</p>
+      </div>
     </footer>
 
     <script src="{{ static_asset_url('script.js') }}" defer></script>

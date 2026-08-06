@@ -4,7 +4,7 @@
     "hero_subtitle": "My independent home for articles, ideas, and video work.",
     "hero_title_zh": "AndyJingLiu",
     "hero_subtitle_zh": "这是我的个人网站，收录文章、思考与视频创作。",
-    "hero_image_path": "images/IMG_1761.webp",
+    "hero_image_path": "images/portrait.webp",
     "about_title": "About Andy",
     "about_body": "I use this independent site to share my writing, ideas, and video work, and to connect everything I publish on X and YouTube.",
     "about_title_zh": "关于我",
@@ -18,7 +18,7 @@
       "slug": "why-i-built-this-site",
       "summary": "Why I created an independent home for my writing and videos.",
       "body": "# Why I Built This Site\n\nI wanted an independent home for my writing, analysis, and videos.\n\n## Goals\n\n- Share long-form analysis\n- Explain complex ideas clearly\n- Build a direct relationship with my audience\n\nThis site brings my articles, X commentary, and YouTube work together in one place.",
-      "image_path": "images/IMG_1761.webp",
+      "image_path": "",
       "language": "en",
       "created_at": "2025-11-20 08:58:49"
     },
@@ -27,7 +27,7 @@
       "slug": "china-canada-future",
       "summary": "Some thoughts on China, Canada, technology, culture, and a changing global landscape.",
       "body": "# China, Canada, and the Future\n\nSome notes on technology, culture, and a changing global landscape.\n\n### Key Points\n\n1. How technology changes the way we communicate\n2. Why culture shapes how we understand the world\n3. The value of long-term thinking\n\nMore details coming soon.",
-      "image_path": "images/IMG_7847.webp",
+      "image_path": "",
       "language": "en",
       "created_at": "2025-11-20 08:58:49"
     }

@@ -78,28 +78,38 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
 
-  /* Ink & paper — "墨蓝". A cool neutral paper (deliberately not the warm
-     ivory used before, which sat within 1-2 hex points of Anthropic's brand
-     surfaces) with a blue-black ink and a single deep blue accent. */
-  --paper: #f5f6f7;
-  --paper-raised: #ffffff;
-  --paper-sunk: #e8eaee;
+  /* Ink & paper — "墨蓝". A near-neutral paper that leans a degree warm (a
+     light warm grey, not ivory — ivory sat too close to other brand surfaces),
+     a blue-black ink, one deep blue accent, and one vermilion reserved
+     exclusively for the seal. Two accents is the limit; the restraint is the
+     point. */
+  --paper: #f4f3f0;
+  --paper-raised: #fbfaf8;
+  --paper-sunk: #e8e6e1;
   --ink: #14181d;
   /* Running text sits a touch lighter than headings — pure --ink over a long
      column reads as harsh. */
   --ink-body: #23282e;
   /* Grey ramp is spaced so all three levels stay distinguishable AND clear
      WCAG AA (4.5:1) against --paper — metadata and the section numbers are
-     real text, not decoration. Ratios: 7.5 / 5.6 / 4.6. */
+     real text, not decoration. Ratios: 7.4 / 5.5 / 4.6. */
   --ink-2: #4a5059;
   --ink-3: #5c636e;
-  --ink-4: #68707c;
+  --ink-4: #666e79;
   --accent: #1c3f5f;
   --accent-soft: #5b8fbd;
   --accent-wash: rgba(28, 63, 95, 0.15);
+  /* 朱砂 — the seal, and nothing else. */
+  --seal: #a8402f;
+  --seal-ink: #ffffff;
   --rule: rgba(20, 24, 29, 0.15);
   --danger: #9b2c1e;
   --success: #1e6b3f;
+  --code-bg: #14181d;
+  --code-ink: #f4f3f0;
+  /* Portraits are treated, not tinted: full monochrome so a casual photograph
+     reads as an intentional author portrait rather than a snapshot. */
+  --portrait-filter: grayscale(1) contrast(1.06) brightness(1.02);
 
   /* Rhythm. One spacing scale, used everywhere. */
   --space-1: 0.25rem;
@@ -137,25 +147,77 @@
 
   --radius: 3px;
   --radius-lg: 4px;
+
+  color-scheme: light dark;
+}
+
+/* --------------------------------------------------------------------------
+   2b. Dark mode
+   Only the ink/paper tokens flip. Every component reads through them, so
+   nothing below this block needs a dark-mode variant. The accent lightens
+   because #1c3f5f on a dark ground has almost no contrast, and the seal warms
+   for the same reason.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14161a;
+    --paper-raised: #1b1e23;
+    --paper-sunk: #23272d;
+    --ink: #eceae6;
+    --ink-body: #d5d3ce;
+    /* Ratios against --paper: 8.9 / 7.0 / 5.6 — same three-step separation as
+       the light ramp, measured in the other direction. */
+    --ink-2: #b3b1ac;
+    --ink-3: #9d9b97;
+    --ink-4: #8a8884;
+    --accent: #8db6d8;
+    --accent-soft: #5b8fbd;
+    --accent-wash: rgba(141, 182, 216, 0.2);
+    --seal: #c25543;
+    --seal-ink: #14161a;
+    --rule: rgba(236, 234, 230, 0.16);
+    --danger: #e08272;
+    --success: #6cbf8e;
+    --code-bg: #0e1013;
+    --code-ink: #d5d3ce;
+    /* Photographs need to sit back a little on a dark ground, or they glow. */
+    --portrait-filter: grayscale(1) contrast(1.02) brightness(0.9);
+  }
+
+  /* Images and embeds carry their own light; take the edge off. */
+  .featured-image:not(.cover-generated) img,
+  .article-card > a:not(.cover-generated) .thumb,
+  .article-row-image:not(.cover-generated) img,
+  .article-hero:not(.cover-generated) img,
+  .video-thumb,
+  .article-body img {
+    filter: brightness(0.9) contrast(1.02);
+  }
 }
 
 /* Alternate palette — "森绿".
    To try it, add data-palette="forest" to the <html> tag in base.html:
        <html lang="{{ locale }}" data-palette="forest">
-   Remove the attribute to go back to 墨蓝. Nothing else needs to change. */
-:root[data-palette="forest"] {
-  --paper: #f1f5f0;
-  --paper-raised: #ffffff;
-  --paper-sunk: #e4eae3;
-  --ink: #161a17;
-  --ink-body: #262c28;
-  --ink-2: #4a504b;
-  --ink-3: #5c635e;
-  --ink-4: #68716a;
-  --accent: #2d5040;
-  --accent-soft: #6da287;
-  --accent-wash: rgba(45, 80, 64, 0.15);
-  --rule: rgba(22, 26, 23, 0.15);
+   Remove the attribute to go back to 墨蓝. Nothing else needs to change.
+   Scoped to light mode so it cannot outrank the dark-mode block above. */
+@media (prefers-color-scheme: light) {
+  :root[data-palette="forest"] {
+    --paper: #f1f4ef;
+    --paper-raised: #fbfcfa;
+    --paper-sunk: #e3e8e1;
+    --ink: #161a17;
+    --ink-body: #262c28;
+    --ink-2: #4a504b;
+    --ink-3: #5c635e;
+    --ink-4: #666f68;
+    --accent: #2d5040;
+    --accent-soft: #6da287;
+    --accent-wash: rgba(45, 80, 64, 0.15);
+    --rule: rgba(22, 26, 23, 0.15);
+    --code-bg: #161a17;
+    --code-ink: #f1f4ef;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -238,13 +300,19 @@ h4 {
   text-wrap: balance;
 }
 
-/* Han faces have no true light/regular contrast at display sizes, so
-   headings need extra weight and much looser leading than Latin. */
+/* Chinese headings are sans, not serif — and this is deliberate.
+   var(--han-serif) leads with Source Han Serif / Noto Serif SC, which almost
+   no reader actually has installed; in practice the stack fell through to
+   Songti SC, whose hairline horizontals disintegrate on screen and whose
+   letterforms do not sit well beside Source Serif 4's Latin. PingFang and
+   HarmonyOS Sans, by contrast, ship on the machines that matter and hold up at
+   display size. Han faces have no true light/regular contrast, so headings
+   need extra weight and much looser leading than Latin. */
 html[lang="zh"] h1,
 html[lang="zh"] h2,
 html[lang="zh"] h3,
 html[lang="zh"] h4 {
-  font-family: "Source Serif 4", var(--han-serif), serif;
+  font-family: "Inter", var(--han-sans), sans-serif;
   font-weight: 600;
   line-height: 1.34;
   letter-spacing: 0;
@@ -309,6 +377,45 @@ html[lang="zh"] .article-meta {
 .article-meta {
   margin-bottom: var(--space-2);
   color: var(--ink-4);
+}
+
+/* The seal — 名章.
+   Every element on this site is ink, paper, or one blue. The seal is the one
+   exception, and it earns that by appearing exactly twice per page: once in
+   the masthead where a full stop used to sit, once at the foot. It replaced a
+   coloured period, which is a decoration; this is a signature. */
+.seal {
+  display: inline-grid;
+  width: 0.94em;
+  height: 0.94em;
+  margin-left: 0.28em;
+  place-items: center;
+  border-radius: 2px;
+  background: var(--seal);
+  color: var(--seal-ink);
+  /* Set slightly off square, the way a hand-pressed seal lands. */
+  transform: rotate(-3.5deg) translateY(0.04em);
+  vertical-align: baseline;
+}
+
+.seal-glyph {
+  font-family: var(--han-serif);
+  font-size: 0.68em;
+  font-weight: 500;
+  line-height: 1;
+  /* Han glyphs carry their own sidebearings; without this the character sits
+     visually low and left inside the square. */
+  transform: translateY(0.02em);
+}
+
+.portrait-caption .seal,
+.footer-brand .seal {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.portrait-caption .seal {
+  margin-left: 0;
 }
 
 /* Inline "read more" link with a rule that grows on hover. */
@@ -393,18 +500,6 @@ html[lang="zh"] .article-meta {
   color: var(--accent);
 }
 
-.btn-light {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: transparent;
-  color: #fff;
-}
-
-.btn-light:hover {
-  border-color: #fff;
-  background: #fff;
-  color: var(--ink);
-}
-
 /* --------------------------------------------------------------------------
    6. Shell — header, container, footer
    -------------------------------------------------------------------------- */
@@ -448,11 +543,6 @@ html[lang="zh"] .article-meta {
   font-weight: 500;
   letter-spacing: -0.015em;
   white-space: nowrap;
-}
-
-.site-brand span,
-.footer-brand span {
-  color: var(--accent);
 }
 
 .site-brand:hover,
@@ -562,13 +652,34 @@ html[lang="zh"] .article-meta {
   color: var(--ink-2);
 }
 
+.footer-baseline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
 .copyright {
-  margin: var(--space-7) 0 0;
+  margin: 0;
   color: var(--ink-4);
   font-family: var(--font-ui);
   font-size: var(--step--2);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
+}
+
+/* Colophon — what the site is set in and built with. A small, specific,
+   truthful line; the sort of detail a person leaves and a template never
+   does. */
+.colophon {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--ink-4);
+  font-family: var(--font-ui);
+  font-size: var(--step--2);
+  line-height: 1.6;
+  text-align: right;
 }
 
 /* --------------------------------------------------------------------------
@@ -632,7 +743,9 @@ html[lang="zh"] .hero h1 {
   font-size: clamp(2.6rem, 4vw + 1.4rem, 4.2rem);
   font-weight: 600;
   line-height: 1.22;
-  letter-spacing: -0.005em;
+  /* Han glyphs are set on a fixed em square, so at display size the built-in
+     sidebearings read as gaps. A little negative tracking closes them. */
+  letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
@@ -668,16 +781,18 @@ html[lang="zh"] .hero-subtitle {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: 50% 38%;
-  filter: grayscale(0.12) contrast(1.02);
-  transition: filter 500ms ease;
-}
-
-.hero:hover .hero-img {
-  filter: grayscale(0) contrast(1.02);
+  object-position: 50% 34%;
+  /* Fully monochrome, and it stays monochrome. A partial desaturation reads
+     as a dirty photograph rather than a decision, and revealing the colour on
+     hover is a trick, not a treatment. */
+  filter: var(--portrait-filter);
 }
 
 .portrait-caption {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6em;
   margin: var(--space-3) 0 0;
   color: var(--ink-4);
   text-align: right;
@@ -769,6 +884,26 @@ html[lang="zh"] .featured-copy h3 {
   padding-top: var(--space-7);
 }
 
+/* A three-column grid holding one or two cards leaves visible empty cells,
+   which reads as missing content rather than as space. Below three, the
+   columns widen to fill the row instead. */
+.article-grid-sparse {
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+}
+
+/* And a single remaining card turned full width would out-shout the featured
+   article above it, so it lies down into a row. */
+.article-grid-sparse:has(> :only-child) .article-card {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.article-grid-sparse:has(> :only-child) .card-copy {
+  padding-top: 0;
+}
+
 .article-card {
   overflow: hidden;
 }
@@ -793,6 +928,24 @@ html[lang="zh"] .featured-copy h3 {
 .article-card:hover .thumb,
 .article-row-image:hover img {
   transform: scale(1.02);
+}
+
+/* Generated covers.
+   These are transparent line drawings, not photographs: the panel behind them
+   is the page's own sunk paper, so they follow light and dark mode with no
+   second artwork. Each composition runs off all four edges by design, so the
+   cover reads as a crop of something larger. They do not scale on hover —
+   magnifying vector rules thickens them and the effect looks like an error. */
+.cover-generated {
+  background: var(--paper-sunk);
+}
+
+.cover-generated img {
+  background: transparent;
+}
+
+.cover-generated:hover img {
+  transform: none;
 }
 
 .card-copy {
@@ -921,34 +1074,32 @@ html[lang="zh"] .video-card-copy h2 {
 }
 
 /* --------------------------------------------------------------------------
-   12. Social banner — the single dark moment on the page
+   12. Elsewhere — the closing line
+   This replaced a full-width dark call-to-action panel. That panel was the
+   grammar of a SaaS landing page: a personal site does not need to shout at
+   its reader on the way out, and the same two links already sit in the footer.
+   A kicker and two text links say the same thing without breaking the page's
+   quiet.
    -------------------------------------------------------------------------- */
 
-.social-banner {
+.elsewhere {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-7);
-  margin-top: var(--space-10);
-  padding: clamp(2.5rem, 5vw, 4rem);
-  border-radius: var(--radius-lg);
-  background: var(--ink);
-  color: var(--paper);
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-7);
+  margin-top: var(--space-9);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--rule);
 }
 
-.social-banner h2 {
-  margin: 0 0 var(--space-3);
-  font-size: var(--step-4);
+.elsewhere .section-kicker {
+  margin-bottom: 0;
 }
 
-.social-banner .eyebrow {
-  color: var(--accent-soft);
-}
-
-.social-banner p:not(.eyebrow) {
-  max-width: var(--measure);
-  margin: 0;
-  color: rgba(255, 255, 255, 0.66);
+.elsewhere-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
 }
 
 /* --------------------------------------------------------------------------
@@ -972,7 +1123,7 @@ html[lang="zh"] .video-card-copy h2 {
 html[lang="zh"] .page-header h1 {
   font-size: clamp(2.6rem, 4vw + 1.4rem, 4.2rem);
   line-height: 1.22;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.02em;
 }
 
 .page-header > p:not(.eyebrow),
@@ -1067,7 +1218,7 @@ html[lang="zh"] .article-row-copy h2 {
 html[lang="zh"] .article-title {
   font-size: clamp(2.4rem, 3.6vw + 1.3rem, 3.8rem);
   line-height: 1.28;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.02em;
 }
 
 .article-deck {
@@ -1183,12 +1334,14 @@ html[lang="zh"] .article-body blockquote {
   margin-bottom: 0;
 }
 
+/* Code uses its own two tokens rather than inverting ink and paper, which in
+   dark mode would have produced a bright block in the middle of the column. */
 .article-body pre {
   overflow-x: auto;
   padding: var(--space-5);
   border-radius: var(--radius);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--code-bg);
+  color: var(--code-ink);
   font-size: var(--step--1);
   line-height: 1.6;
 }
@@ -1262,8 +1415,8 @@ html[lang="zh"] .article-body blockquote {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: 50% 35%;
-  filter: grayscale(0.12) contrast(1.02);
+  object-position: 50% 34%;
+  filter: var(--portrait-filter);
 }
 
 .about-copy {
@@ -1279,7 +1432,7 @@ html[lang="zh"] .article-body blockquote {
 
 html[lang="zh"] .about-copy h1 {
   line-height: 1.28;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.015em;
 }
 
 .about-statement {
@@ -1651,21 +1804,41 @@ html[lang="zh"] .about-statement {
   }
 
   .portrait-caption {
+    justify-content: flex-start;
     text-align: left;
   }
 
   .page-header-with-action,
-  .social-banner,
-  .footer-inner {
+  .elsewhere,
+  .footer-inner,
+  .footer-baseline {
     align-items: flex-start;
     flex-direction: column;
     gap: var(--space-5);
+  }
+
+  .footer-baseline {
+    gap: var(--space-3);
+  }
+
+  .colophon {
+    text-align: left;
   }
 
   .article-grid,
   .home-video-grid,
   .video-list-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One column means the sparse-grid row layout has nothing to lie down into. */
+  .article-grid-sparse:has(> :only-child) .article-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .article-grid-sparse:has(> :only-child) .card-copy {
+    padding-top: var(--space-4);
   }
 
   .page-header {
@@ -1715,7 +1888,7 @@ html[lang="zh"] .about-statement {
     aspect-ratio: 3 / 2;
   }
 
-  .social-banner {
+  .elsewhere {
     margin-top: var(--space-8);
   }
 

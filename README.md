@@ -7,7 +7,9 @@ The source code for AndyJingLiu's bilingual personal website: articles, ideas, Y
 - Chinese-first public pages with a complete English version and language switcher
 - A personal-brand homepage with editable bilingual hero and biography content
 - Markdown article publishing, editing, deletion, and per-article language selection
+- Generated cover art for any article published without an image, drawn deterministically from the slug
 - Sanitized Markdown rendering to prevent stored script injection
+- Light and dark palettes driven by one set of design tokens
 - Automatically refreshed latest-video feeds with privacy-enhanced YouTube embeds
 - Password-protected admin routes
 - CSRF protection on every form that changes data
@@ -112,6 +114,10 @@ AndyJingLiu.com
 ```
 
 GitHub Pages cannot run this application because it only serves static files, while this project requires Python, authentication, and a writable database. GitHub remains the source repository and CI trigger; the Flask container runs on a Python-capable host, and Cloudflare manages the public domain in front of it.
+
+## Article covers
+
+An article published without an image is not published bare. `/covers/<slug>.svg` returns a line drawing generated from a hash of the slug: one of four compositions — concentric arcs, a ruled field, nested rectangles, or a fan — in the site's blue with a single vermilion element. The same slug always produces the same artwork, nothing is written to disk, and the background is transparent so the covers follow the light and dark palettes without a second version. Uploading an image to an article overrides its generated cover.
 
 ## Content data
 

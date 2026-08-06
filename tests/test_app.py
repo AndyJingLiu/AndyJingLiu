@@ -259,3 +259,42 @@ def test_healthcheck(client):
     response = client.get("/healthz")
     assert response.status_code == 200
     assert response.json == {"status": "ok"}
+
+
+def test_generated_cover_is_served_and_deterministic(client):
+    first = client.get("/covers/why-i-built-this-site.svg")
+    second = client.get("/covers/why-i-built-this-site.svg")
+    assert first.status_code == 200
+    assert first.headers["Content-Type"].startswith("image/svg+xml")
+    assert "immutable" in first.headers["Cache-Control"]
+    assert first.data == second.data
+    assert b"<svg" in first.data
+
+
+def test_generated_covers_differ_between_articles(client):
+    one = client.get("/covers/why-i-built-this-site.svg").data
+    two = client.get("/covers/china-canada-future.svg").data
+    assert one != two
+
+
+def test_generated_cover_rejects_paths_that_are_not_slugs(client):
+    for bad in ("Not-A-Slug", "has_underscore", "-leading", "trailing-"):
+        assert client.get(f"/covers/{bad}.svg").status_code == 404
+
+
+def test_every_cover_is_drawn_and_carries_the_accent():
+    """No slug may produce a blank cover or one with no vermilion element.
+
+    Each composition deliberately runs off the frame, so this guards the case
+    where the drawing lands entirely outside the crop.
+    """
+    for index in range(120):
+        svg = project.render_cover_svg(f"article-{index}")
+        assert svg.count("<") > 10
+        assert project.COVER_VERMILION in svg
+
+
+def test_article_without_an_image_falls_back_to_a_generated_cover(client):
+    response = client.get("/en/articles")
+    assert response.status_code == 200
+    assert b"/covers/" in response.data
