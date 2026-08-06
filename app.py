@@ -196,7 +196,6 @@ UI_COPY = {
         "social_title": "在更多平台找到我",
         "social_body": "通过 X 关注我的最新动态，或在 YouTube 观看完整视频。",
         "featured": "最新发布",
-        "colophon": "西文 Source Serif 4 与 Inter，中文 PingFang。由 Flask 构建，自行托管。",
         "seal_label": "刘的印章",
     },
     "en": {
@@ -229,10 +228,6 @@ UI_COPY = {
             "Follow my latest updates on X or watch the full videos on YouTube."
         ),
         "featured": "Latest release",
-        "colophon": (
-            "Set in Source Serif 4 and Inter, with PingFang for Chinese. "
-            "Built with Flask and self-hosted."
-        ),
         "seal_label": "Seal of Liu",
     },
 }

@@ -632,9 +632,13 @@ html[lang="zh"] .article-meta {
   gap: var(--space-6);
 }
 
+.footer-identity {
+  text-align: center;
+}
+
 .footer-inner p {
   max-width: 32ch;
-  margin: var(--space-2) 0 0;
+  margin: var(--space-2) auto 0;
   color: var(--ink-3);
   font-size: var(--step--1);
 }
@@ -652,34 +656,13 @@ html[lang="zh"] .article-meta {
   color: var(--ink-2);
 }
 
-.footer-baseline {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-5);
-  margin-top: var(--space-7);
-}
-
 .copyright {
-  margin: 0;
+  margin: var(--space-7) 0 0;
   color: var(--ink-4);
   font-family: var(--font-ui);
   font-size: var(--step--2);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
-}
-
-/* Colophon — what the site is set in and built with. A small, specific,
-   truthful line; the sort of detail a person leaves and a template never
-   does. */
-.colophon {
-  max-width: 46ch;
-  margin: 0;
-  color: var(--ink-4);
-  font-family: var(--font-ui);
-  font-size: var(--step--2);
-  line-height: 1.6;
-  text-align: right;
 }
 
 /* --------------------------------------------------------------------------
@@ -722,10 +705,15 @@ html[lang="zh"] .article-meta {
    8. Home — masthead
    -------------------------------------------------------------------------- */
 
+/* The copy is centred against the portrait rather than sitting on its
+   baseline. Bottom alignment is the tidier idea on paper — both columns meet
+   the rule — but the portrait is a 4:5 block and the copy is barely half its
+   height, so in practice it left a large hole above the headline and pushed
+   the name most of the way down the screen. */
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 0.44fr);
-  align-items: end;
+  align-items: center;
   gap: clamp(2rem, 5vw, 4.5rem);
   padding-bottom: var(--space-8);
   border-bottom: 1px solid var(--ink);
@@ -1810,18 +1798,17 @@ html[lang="zh"] .about-statement {
 
   .page-header-with-action,
   .elsewhere,
-  .footer-inner,
-  .footer-baseline {
+  .footer-inner {
     align-items: flex-start;
     flex-direction: column;
     gap: var(--space-5);
   }
 
-  .footer-baseline {
-    gap: var(--space-3);
-  }
-
-  .colophon {
+  /* Stacked, a centred identity block would float oddly above left-aligned
+     links, so it goes back to flush left. */
+  .footer-identity,
+  .footer-inner p {
+    margin-left: 0;
     text-align: left;
   }
 
