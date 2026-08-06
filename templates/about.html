@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="about-page">
-  <div class="about-portrait"><img src="{{ static_asset_url(home_content.hero_image_path) }}" alt="AndyJingLiu" width="1200" height="1600" /></div>
+  <div class="about-portrait">
+    {% set portrait_path = home_content.hero_image_path %}
+    {% set portrait_sizes = '(max-width: 720px) calc(100vw - 2.5rem), 26rem' %}
+    {% set portrait_class = '' %}
+    {% set portrait_fetch_priority = '' %}
+    {% include "_portrait_image.html" %}
+  </div>
   <div class="about-copy">
     <p class="eyebrow">ANDYJINGLIU · {{ ui.about_title }}</p>
     <h1>{{ home_content.about_title }}</h1>

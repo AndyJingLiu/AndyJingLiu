@@ -16,7 +16,11 @@
     {% if home_content.hero_image_path %}
     <div class="hero-visual">
       <div class="portrait-frame">
-        <img src="{{ static_asset_url(home_content.hero_image_path) }}" alt="AndyJingLiu" class="hero-img" width="1200" height="1600" fetchpriority="high" />
+        {% set portrait_path = home_content.hero_image_path %}
+        {% set portrait_sizes = '(max-width: 720px) calc(100vw - 2.5rem), (max-width: 1000px) 210px, 340px' %}
+        {% set portrait_class = 'hero-img' %}
+        {% set portrait_fetch_priority = 'high' %}
+        {% include "_portrait_image.html" %}
       </div>
       <p class="portrait-caption">{% include "_seal.html" %}</p>
     </div>
@@ -81,7 +85,7 @@
       {% for video in videos %}
       <article class="home-video-card">
         <div class="video-wrapper video-lazy" data-youtube-id="{{ video.youtube_id }}">
-          <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg" alt="{{ video.title }}" class="video-thumb" loading="lazy" />
+          <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg" alt="{{ video.title }}" class="video-thumb" loading="lazy" decoding="async" width="480" height="360" />
           <button class="video-play-button" type="button" aria-label="{{ '播放' if locale == 'zh' else 'Play' }} {{ video.title }}">▶</button>
         </div>
         <h3><a href="{{ video.watch_url }}" target="_blank" rel="noopener noreferrer">{{ video.title }}</a></h3>

@@ -97,7 +97,6 @@
   --ink-3: #5c636e;
   --ink-4: #666e79;
   --accent: #1c3f5f;
-  --accent-soft: #5b8fbd;
   --accent-wash: rgba(28, 63, 95, 0.15);
   /* 朱砂 — the seal, and nothing else. */
   --seal: #a8402f;
@@ -112,7 +111,6 @@
   --portrait-filter: grayscale(1) contrast(1.06) brightness(1.02);
 
   /* Rhythm. One spacing scale, used everywhere. */
-  --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
@@ -146,8 +144,6 @@
   --rail: 2.5rem;
 
   --radius: 3px;
-  --radius-lg: 4px;
-
   color-scheme: light dark;
 }
 
@@ -172,7 +168,6 @@
     --ink-3: #9d9b97;
     --ink-4: #8a8884;
     --accent: #8db6d8;
-    --accent-soft: #5b8fbd;
     --accent-wash: rgba(141, 182, 216, 0.2);
     --seal: #c25543;
     --seal-ink: #14161a;
@@ -212,7 +207,6 @@
     --ink-3: #5c635e;
     --ink-4: #666f68;
     --accent: #2d5040;
-    --accent-soft: #6da287;
     --accent-wash: rgba(45, 80, 64, 0.15);
     --rule: rgba(22, 26, 23, 0.15);
     --code-bg: #161a17;
@@ -1467,10 +1461,6 @@ html[lang="zh"] .about-statement {
   margin: 0;
 }
 
-.empty-state {
-  color: var(--ink-3);
-}
-
 /* --------------------------------------------------------------------------
    17. Admin, forms, error pages
    -------------------------------------------------------------------------- */
@@ -1563,13 +1553,6 @@ html[lang="zh"] .about-statement {
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--rule);
   font-size: var(--step-2);
-}
-
-.form-help {
-  margin: 0;
-  color: var(--ink-3);
-  font-family: var(--font-ui);
-  font-size: var(--step--1);
 }
 
 .admin-actions,

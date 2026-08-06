@@ -71,6 +71,8 @@ Open [http://127.0.0.1:5000](http://127.0.0.1:5000). The admin login is at `/adm
 
 The X and YouTube channel URLs can be entered under **Admin → Edit homepage**. The latest regular public videos are loaded from YouTube's official channel feed and cached for 15 minutes; Shorts are excluded. Empty social fields are not displayed publicly. Chinese pages live under `/zh/`; English pages live under `/en/`.
 
+The article title field is the page's single level-one heading. Markdown body headings are normalized to level two or deeper, so authors should start body sections with `##` rather than repeating the title with `#`.
+
 ## Tests and security checks
 
 ```bash

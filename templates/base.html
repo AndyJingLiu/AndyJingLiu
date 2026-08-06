@@ -11,8 +11,8 @@
     <meta name="description" content="{{ meta_description | default('The personal site of AndyJingLiu: articles, ideas, and videos.') }}" />
     <meta name="robots" content="{{ meta_robots | default('index, follow') }}" />
     <link rel="canonical" href="{{ canonical_url }}" />
-    {% if alternate_url %}
-    <link rel="alternate" hreflang="{{ 'en' if locale == 'zh' else 'zh-CN' }}" href="{{ site_url }}{{ alternate_url }}" />
+    {% if hreflang_url %}
+    <link rel="alternate" hreflang="{{ 'en' if locale == 'zh' else 'zh-CN' }}" href="{{ site_url }}{{ hreflang_url }}" />
     {% endif %}
     <link rel="icon" type="image/png" href="{{ static_asset_url('favicon.png') }}" />
 
@@ -24,8 +24,8 @@
     {% if og_image %}<meta property="og:image" content="{{ og_image }}" />{% endif %}
     <meta name="twitter:card" content="{% if og_image %}summary_large_image{% else %}summary{% endif %}" />
 
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ static_asset_url('fonts/source-serif-4-latin-wght-normal.woff2') }}" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ static_asset_url('fonts/inter-latin-wght-normal.woff2') }}" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/source-serif-4-latin-wght-normal.woff2') }}" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/inter-latin-wght-normal.woff2') }}" />
     <link rel="stylesheet" href="{{ static_asset_url('styles.css') }}" />
   </head>
   <body class="locale-{{ locale }}">

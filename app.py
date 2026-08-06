@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import math
+import mimetypes
 import os
 import random
 import re
@@ -39,6 +40,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent
+mimetypes.add_type("font/woff2", ".woff2")
 load_dotenv(BASE_DIR / ".env")
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 
@@ -130,7 +132,6 @@ ALLOWED_MARKDOWN_TAGS = {
     "code",
     "del",
     "em",
-    "h1",
     "h2",
     "h3",
     "h4",
@@ -194,7 +195,6 @@ UI_COPY = {
         "watch_youtube": "在 YouTube 观看",
         "back_articles": "返回文章列表",
         "social_title": "在更多平台找到我",
-        "social_body": "通过 X 关注我的最新动态，或在 YouTube 观看完整视频。",
         "featured": "最新发布",
         "seal_label": "刘的印章",
     },
@@ -224,9 +224,6 @@ UI_COPY = {
         "watch_youtube": "Watch on YouTube",
         "back_articles": "Back to articles",
         "social_title": "Find me elsewhere",
-        "social_body": (
-            "Follow my latest updates on X or watch the full videos on YouTube."
-        ),
         "featured": "Latest release",
         "seal_label": "Seal of Liu",
     },
@@ -310,17 +307,14 @@ def ensure_article_columns(conn: sqlite3.Connection) -> None:
         "Some thoughts on China, Canada, technology, culture, and a changing "
         "global landscape."
     )
-    updated_body = """# China, Canada, and the Future
-
-Some notes on technology, culture, and a changing global landscape.
-
-### Key Points
-
-1. How technology changes the way we communicate
-2. Why culture shapes how we understand the world
-3. The value of long-term thinking
-
-More details coming soon."""
+    updated_body = (
+        "Some notes on technology, culture, and a changing global landscape.\n\n"
+        "## Key Points\n\n"
+        "1. How technology changes the way we communicate\n"
+        "2. Why culture shapes how we understand the world\n"
+        "3. The value of long-term thinking\n\n"
+        "More details coming soon."
+    )
     conn.execute(
         """
         UPDATE articles
@@ -330,6 +324,13 @@ More details coming soon."""
         """,
         (updated_summary, updated_body),
     )
+    for article in conn.execute("SELECT id, title, body FROM articles").fetchall():
+        normalized_body = normalize_article_markdown(article["body"], article["title"])
+        if normalized_body != article["body"]:
+            conn.execute(
+                "UPDATE articles SET body = ? WHERE id = ?",
+                (normalized_body, article["id"]),
+            )
 
 
 def remove_legacy_demo_videos(conn: sqlite3.Connection) -> None:
@@ -693,6 +694,48 @@ def generate_unique_slug(title: str, conn: sqlite3.Connection) -> str:
         slug = f"{base_slug}-{counter}"
         counter += 1
     return slug
+
+
+MARKDOWN_HEADING_PATTERN = re.compile(r"^(\s*)(#{1,6})\s+(.+?)\s*$")
+
+
+def normalize_article_markdown(text: str, title: str) -> str:
+    """Keep the template title as the article's only level-one heading."""
+    lines = text.strip().splitlines()
+    first_content = next(
+        (index for index, line in enumerate(lines) if line.strip()), None
+    )
+    if first_content is not None:
+        match = MARKDOWN_HEADING_PATTERN.match(lines[first_content])
+        if (
+            match
+            and len(match.group(2)) == 1
+            and " ".join(match.group(3).split()).casefold()
+            == " ".join(title.split()).casefold()
+        ):
+            del lines[first_content]
+            if first_content < len(lines) and not lines[first_content].strip():
+                del lines[first_content]
+
+    fence = None
+    previous_heading_level = 1
+    normalized_lines = []
+    for line in lines:
+        stripped = line.lstrip()
+        marker = stripped[:3] if stripped.startswith(("```", "~~~")) else None
+        if marker:
+            fence = None if fence == marker else marker if fence is None else fence
+            normalized_lines.append(line)
+            continue
+        if fence is None:
+            heading = MARKDOWN_HEADING_PATTERN.match(line)
+            if heading:
+                level = max(2, len(heading.group(2)))
+                level = min(level, previous_heading_level + 1)
+                line = f"{heading.group(1)}{'#' * level} {heading.group(3)}"
+                previous_heading_level = level
+        normalized_lines.append(line)
+    return "\n".join(normalized_lines).strip()
 
 
 def render_markdown(text: str) -> str:
@@ -1144,14 +1187,16 @@ def homepage_localized(locale):
         if locale == "zh"
         else "AndyJingLiu · Writing, ideas, and video"
     )
+    alternate_url = url_for(
+        "homepage_localized", locale="en" if locale == "zh" else "zh"
+    )
     return render_template(
         "homepage.html",
         home_content=home_content,
         articles=articles,
         videos=videos,
-        alternate_url=url_for(
-            "homepage_localized", locale="en" if locale == "zh" else "zh"
-        ),
+        alternate_url=alternate_url,
+        hreflang_url=alternate_url,
         meta_title=meta_title,
         meta_description=meta_description,
     )
@@ -1175,12 +1220,14 @@ def articles_localized(locale):
             """,
             (locale,),
         ).fetchall()
+    alternate_url = url_for(
+        "articles_localized", locale="en" if locale == "zh" else "zh"
+    )
     return render_template(
         "articles.html",
         articles=article_rows,
-        alternate_url=url_for(
-            "articles_localized", locale="en" if locale == "zh" else "zh"
-        ),
+        alternate_url=alternate_url,
+        hreflang_url=alternate_url,
         meta_title=(
             "文章 · AndyJingLiu" if locale == "zh" else "Articles · AndyJingLiu"
         ),
@@ -1240,12 +1287,12 @@ def videos():
 def videos_localized(locale):
     locale = require_locale(locale)
     video_rows = latest_videos(12)
+    alternate_url = url_for("videos_localized", locale="en" if locale == "zh" else "zh")
     return render_template(
         "videos.html",
         videos=video_rows,
-        alternate_url=url_for(
-            "videos_localized", locale="en" if locale == "zh" else "zh"
-        ),
+        alternate_url=alternate_url,
+        hreflang_url=alternate_url,
         meta_title=("视频 · AndyJingLiu" if locale == "zh" else "Videos · AndyJingLiu"),
         meta_description=UI_COPY[locale]["videos_intro"],
     )
@@ -1259,12 +1306,12 @@ def about_localized(locale):
             "SELECT * FROM homepage_content WHERE id = 1"
         ).fetchone()
     home_content = localized_home_content(home_row, locale)
+    alternate_url = url_for("about_localized", locale="en" if locale == "zh" else "zh")
     return render_template(
         "about.html",
         home_content=home_content,
-        alternate_url=url_for(
-            "about_localized", locale="en" if locale == "zh" else "zh"
-        ),
+        alternate_url=alternate_url,
+        hreflang_url=alternate_url,
         meta_title=(
             "关于我 · AndyJingLiu" if locale == "zh" else "About · AndyJingLiu"
         ),
@@ -1426,6 +1473,9 @@ def new_article():
     error = None
     if request.method == "POST":
         form_data = {key: (request.form.get(key) or "").strip() for key in form_data}
+        form_data["body"] = normalize_article_markdown(
+            form_data["body"], form_data["title"]
+        )
         error = validate_article_form(form_data)
         if error is None:
             try:
@@ -1491,6 +1541,9 @@ def edit_article(article_id):
             form_data = {
                 key: (request.form.get(key) or "").strip() for key in form_data
             }
+            form_data["body"] = normalize_article_markdown(
+                form_data["body"], form_data["title"]
+            )
             error = validate_article_form(form_data)
             if error is None:
                 slug = slugify(form_data["title"])

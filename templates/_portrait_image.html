@@ -1,0 +1,12 @@
+<img
+  src="{{ static_asset_url(portrait_path) }}"
+  {% if portrait_path == 'images/portrait.webp' %}
+  srcset="{{ static_asset_url('images/portrait-480.webp') }} 480w, {{ static_asset_url('images/portrait-800.webp') }} 800w, {{ static_asset_url('images/portrait.webp') }} 1200w"
+  sizes="{{ portrait_sizes }}"
+  {% endif %}
+  alt="AndyJingLiu"
+  {% if portrait_class %}class="{{ portrait_class }}"{% endif %}
+  width="1200"
+  height="1600"
+  {% if portrait_fetch_priority %}fetchpriority="{{ portrait_fetch_priority }}"{% endif %}
+/>

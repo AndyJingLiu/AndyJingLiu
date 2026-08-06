@@ -9,7 +9,7 @@
     {% for video in videos %}
     <article class="video-card">
       <div class="video-wrapper video-lazy" data-youtube-id="{{ video.youtube_id }}">
-        <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg" alt="{{ video.title }}" class="video-thumb" loading="lazy" />
+        <img src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg" alt="{{ video.title }}" class="video-thumb" loading="lazy" decoding="async" width="480" height="360" />
         <button class="video-play-button" type="button" aria-label="{{ '播放' if locale == 'zh' else 'Play' }} {{ video.title }}">▶</button>
       </div>
       <div class="video-card-copy"><p class="article-meta">{% if video.published_at %}{{ video.published_at | nice_date }}{% else %}VIDEO {{ "%02d" | format(loop.index) }}{% endif %}</p><h2>{{ video.title }}</h2>{% if video.description %}<p>{{ video.description }}</p>{% endif %}<a class="text-link" href="{{ video.watch_url }}" target="_blank" rel="noopener noreferrer">{{ ui.watch_youtube }} ↗</a></div>
