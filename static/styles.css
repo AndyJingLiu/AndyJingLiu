@@ -99,9 +99,11 @@
   --ink-4: #726860;
   --accent: #6b2233;
   --accent-wash: rgba(107, 34, 51, 0.15);
-  /* 古金 — the seal, and nothing else. Held at this value rather than a
-     brighter gold so white sits on it at 4.9:1. */
-  --seal: #8c6a3f;
+  /* The seal takes the accent rather than a second colour: one hue for the
+     whole site. Kept as its own token so it can be pulled back out to a
+     contrasting gold (#8c6a3f) by changing this line alone. White on it
+     is 11:1, which is what lets the mark hold at 20px. */
+  --seal: #6b2233;
   --seal-ink: #ffffff;
   --rule: rgba(28, 23, 20, 0.15);
   /* Pulled well away from --accent in both hue and value; a burgundy site
@@ -113,6 +115,11 @@
   /* Portraits are treated, not tinted: full monochrome so a casual photograph
      reads as an intentional author portrait rather than a snapshot. */
   --portrait-filter: grayscale(1) contrast(1.06) brightness(1.02);
+
+  /* The seal is one physical object at one physical size, so it is set here
+     and never per-context. 20px: 18 went weak standing on its own under the
+     portrait, 24 shouted over the 1.2rem wordmark it sits beside. */
+  --seal-size: 1.25rem;
 
   /* Rhythm. One spacing scale, used everywhere. */
   --space-2: 0.5rem;
@@ -175,8 +182,9 @@
        lifts to the same hue at porcelain value instead. */
     --accent: #d9a0a8;
     --accent-wash: rgba(217, 160, 168, 0.2);
-    /* Gold has room to open up here, so the seal moves to champagne. */
-    --seal: #c9a961;
+    /* Follows the accent here too — a pressed seal in reverse, dark glyph on
+       a light ground. 8.4:1. */
+    --seal: #d9a0a8;
     --seal-ink: #171310;
     --rule: rgba(239, 233, 224, 0.16);
     --danger: #e0917f;
@@ -381,19 +389,23 @@ html[lang="zh"] .article-meta {
 }
 
 /* The seal — 名章.
-   Every element on this site is ink, paper, or one burgundy. The seal is the one
-   exception, and it earns that by appearing exactly twice per page: once in
-   the masthead where a full stop used to sit, once at the foot. It replaced a
-   coloured period, which is a decoration; this is a signature. */
+   A person owns one seal, cut once, at one size. So this is sized in absolute
+   units and anchors its own font-size: every instance is the same object no
+   matter what type it happens to sit next to. Sizing it in `em` is what let
+   the three on the homepage drift apart — the stamp inherited the caption's
+   0.75rem and the glyph shrank to a third of its square while the box stayed
+   put. Nothing below may be overridden per-context. */
 .seal {
   display: inline-grid;
-  width: 0.94em;
-  height: 0.94em;
+  width: var(--seal-size);
+  height: var(--seal-size);
   margin-left: 0.28em;
   place-items: center;
   border-radius: 2px;
   background: var(--seal);
   color: var(--seal-ink);
+  /* The anchor. Descendant `em` now resolves against the seal, not the page. */
+  font-size: var(--seal-size);
   /* Set slightly off square, the way a hand-pressed seal lands. */
   transform: rotate(-3.5deg) translateY(0.04em);
   vertical-align: baseline;
@@ -409,12 +421,8 @@ html[lang="zh"] .article-meta {
   transform: translateY(0.02em);
 }
 
-.portrait-caption .seal,
-.footer-brand .seal {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
+/* The only permitted per-context change: standing alone under the portrait
+   there is no wordmark to sit against, so the optical gap is dropped. */
 .portrait-caption .seal {
   margin-left: 0;
 }
