@@ -309,7 +309,7 @@ def test_generated_cover_rejects_paths_that_are_not_slugs(client):
 
 
 def test_every_cover_is_drawn_and_carries_the_accent():
-    """No slug may produce a blank cover or one with no vermilion element.
+    """No slug may produce a blank cover or one with no gold element.
 
     Each composition deliberately runs off the frame, so this guards the case
     where the drawing lands entirely outside the crop.
@@ -317,7 +317,7 @@ def test_every_cover_is_drawn_and_carries_the_accent():
     for index in range(120):
         svg = project.render_cover_svg(f"article-{index}")
         assert svg.count("<") > 10
-        assert project.COVER_VERMILION in svg
+        assert project.COVER_GOLD in svg
 
 
 def test_article_without_an_image_falls_back_to_a_generated_cover(client):

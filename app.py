@@ -868,7 +868,7 @@ def static_asset_url(filename: str) -> str:
 # deterministic function of the slug, so a given article always looks the same,
 # nothing is stored on disk, and a new post is never published bare. The four
 # compositions are line work only — concentric arcs, a ruled field, nested
-# rectangles, a fan — in the site's own blue with a single vermilion element,
+# rectangles, a fan — in the site's own burgundy with a single gold element,
 # echoing the seal. The background is left transparent so the surrounding
 # --paper-sunk shows through and the covers follow light and dark mode without
 # needing a second version.
@@ -877,8 +877,12 @@ def static_asset_url(filename: str) -> str:
 COVER_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 COVER_WIDTH = 1000
 COVER_HEIGHT = 800
-COVER_BLUE = "#5c8db3"
-COVER_VERMILION = "#b0483a"
+# One cover serves both colour schemes, so these are picked at the value where
+# they clear 3:1 against --paper-sunk in *both* directions rather than looking
+# ideal in either. Hence a dusty burgundy and a muted gold, not the saturated
+# --accent and --seal the tokens use.
+COVER_BURGUNDY = "#a9677a"
+COVER_GOLD = "#9d7538"
 # Stroke weights are in viewBox units. A card renders the cover about 360px
 # wide, so the viewBox is scaled down roughly 2.8x and a nominal 2.8 lands at
 # about one device pixel — thin, but still a line rather than a rumour. The
@@ -895,10 +899,10 @@ def _cover_rng(slug: str) -> random.Random:
 
 
 def _cover_accent_index(rng: random.Random, count: int) -> int:
-    """Pick which element is vermilion, from the middle half of the set.
+    """Pick which element is gold, from the middle half of the set.
 
     Every composition runs off the frame, so an accent drawn from the ends
-    often landed outside the crop and the cover came back all blue. The middle
+    often landed outside the crop and the cover came back all burgundy. The middle
     half is reliably inside the frame.
     """
     low = count // 4
@@ -908,8 +912,8 @@ def _cover_accent_index(rng: random.Random, count: int) -> int:
 
 def _cover_stroke(index: int, accent_at: int) -> tuple[str, float]:
     if index == accent_at:
-        return COVER_VERMILION, COVER_ACCENT_LINE
-    return COVER_BLUE, COVER_HAIRLINE
+        return COVER_GOLD, COVER_ACCENT_LINE
+    return COVER_BURGUNDY, COVER_HAIRLINE
 
 
 def _cover_arcs(rng: random.Random) -> list[str]:

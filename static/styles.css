@@ -78,34 +78,38 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
 
-  /* Ink & paper — "墨蓝". A near-neutral paper that leans a degree warm (a
-     light warm grey, not ivory — ivory sat too close to other brand surfaces),
-     a blue-black ink, one deep blue accent, and one vermilion reserved
+  /* Ink & paper — "酒红". Laid paper that leans warm, a warm blue-free black
+     for ink, one deep burgundy accent, and one antique gold reserved
      exclusively for the seal. Two accents is the limit; the restraint is the
-     point. */
-  --paper: #f4f3f0;
-  --paper-raised: #fbfaf8;
-  --paper-sunk: #e8e6e1;
-  --ink: #14181d;
+     point. The whole ramp is warm-biased — no neutral or cool grey appears
+     anywhere, which is what keeps it reading as printed matter rather than
+     as an interface. */
+  --paper: #f6f2ec;
+  --paper-raised: #fcfaf6;
+  --paper-sunk: #eae3d9;
+  --ink: #1c1714;
   /* Running text sits a touch lighter than headings — pure --ink over a long
      column reads as harsh. */
-  --ink-body: #23282e;
+  --ink-body: #2b2521;
   /* Grey ramp is spaced so all three levels stay distinguishable AND clear
      WCAG AA (4.5:1) against --paper — metadata and the section numbers are
-     real text, not decoration. Ratios: 7.4 / 5.5 / 4.6. */
-  --ink-2: #4a5059;
-  --ink-3: #5c636e;
-  --ink-4: #666e79;
-  --accent: #1c3f5f;
-  --accent-wash: rgba(28, 63, 95, 0.15);
-  /* 朱砂 — the seal, and nothing else. */
-  --seal: #a8402f;
+     real text, not decoration. Ratios: 7.5 / 5.8 / 4.9. */
+  --ink-2: #554c46;
+  --ink-3: #675d56;
+  --ink-4: #726860;
+  --accent: #6b2233;
+  --accent-wash: rgba(107, 34, 51, 0.15);
+  /* 古金 — the seal, and nothing else. Held at this value rather than a
+     brighter gold so white sits on it at 4.9:1. */
+  --seal: #8c6a3f;
   --seal-ink: #ffffff;
-  --rule: rgba(20, 24, 29, 0.15);
-  --danger: #9b2c1e;
-  --success: #1e6b3f;
-  --code-bg: #14181d;
-  --code-ink: #f4f3f0;
+  --rule: rgba(28, 23, 20, 0.15);
+  /* Pulled well away from --accent in both hue and value; a burgundy site
+     cannot afford an error state that reads as decoration. */
+  --danger: #8e2b20;
+  --success: #2e6b48;
+  --code-bg: #1c1714;
+  --code-ink: #f6f2ec;
   /* Portraits are treated, not tinted: full monochrome so a casual photograph
      reads as an intentional author portrait rather than a snapshot. */
   --portrait-filter: grayscale(1) contrast(1.06) brightness(1.02);
@@ -157,25 +161,28 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #14161a;
-    --paper-raised: #1b1e23;
-    --paper-sunk: #23272d;
-    --ink: #eceae6;
-    --ink-body: #d5d3ce;
-    /* Ratios against --paper: 8.9 / 7.0 / 5.6 — same three-step separation as
+    --paper: #171310;
+    --paper-raised: #1f1a16;
+    --paper-sunk: #282119;
+    --ink: #efe9e0;
+    --ink-body: #d8d1c7;
+    /* Ratios against --paper: 8.3 / 6.3 / 4.9 — same three-step separation as
        the light ramp, measured in the other direction. */
-    --ink-2: #b3b1ac;
-    --ink-3: #9d9b97;
-    --ink-4: #8a8884;
-    --accent: #8db6d8;
-    --accent-wash: rgba(141, 182, 216, 0.2);
-    --seal: #c25543;
-    --seal-ink: #14161a;
-    --rule: rgba(236, 234, 230, 0.16);
-    --danger: #e08272;
-    --success: #6cbf8e;
-    --code-bg: #0e1013;
-    --code-ink: #d5d3ce;
+    --ink-2: #b5ada2;
+    --ink-3: #9e958a;
+    --ink-4: #8b8278;
+    /* Burgundy cannot survive on a dark ground — it goes to mud. The accent
+       lifts to the same hue at porcelain value instead. */
+    --accent: #d9a0a8;
+    --accent-wash: rgba(217, 160, 168, 0.2);
+    /* Gold has room to open up here, so the seal moves to champagne. */
+    --seal: #c9a961;
+    --seal-ink: #171310;
+    --rule: rgba(239, 233, 224, 0.16);
+    --danger: #e0917f;
+    --success: #7bc49a;
+    --code-bg: #100d0b;
+    --code-ink: #d8d1c7;
     /* Photographs need to sit back a little on a dark ground, or they glow. */
     --portrait-filter: grayscale(1) contrast(1.02) brightness(0.9);
   }
@@ -194,7 +201,7 @@
 /* Alternate palette — "森绿".
    To try it, add data-palette="forest" to the <html> tag in base.html:
        <html lang="{{ locale }}" data-palette="forest">
-   Remove the attribute to go back to 墨蓝. Nothing else needs to change.
+   Remove the attribute to go back to 酒红. Nothing else needs to change.
    Scoped to light mode so it cannot outrank the dark-mode block above. */
 @media (prefers-color-scheme: light) {
   :root[data-palette="forest"] {
@@ -374,7 +381,7 @@ html[lang="zh"] .article-meta {
 }
 
 /* The seal — 名章.
-   Every element on this site is ink, paper, or one blue. The seal is the one
+   Every element on this site is ink, paper, or one burgundy. The seal is the one
    exception, and it earns that by appearing exactly twice per page: once in
    the masthead where a full stop used to sit, once at the foot. It replaced a
    coloured period, which is a decoration; this is a signature. */
