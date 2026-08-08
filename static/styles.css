@@ -79,11 +79,11 @@
     monospace;
 
   /* Ink & paper — "酒红". Laid paper that leans warm, a warm blue-free black
-     for ink, one deep burgundy accent, and one antique gold reserved
-     exclusively for the seal. Two accents is the limit; the restraint is the
-     point. The whole ramp is warm-biased — no neutral or cool grey appears
-     anywhere, which is what keeps it reading as printed matter rather than
-     as an interface. */
+     for ink, and exactly one colour: a deep burgundy. Links, the seal, and the
+     accent stroke on generated covers are all the same hue — one colour is the
+     limit, and the restraint is the point. The whole ramp is warm-biased — no
+     neutral or cool grey appears anywhere, which is what keeps it reading as
+     printed matter rather than as an interface. */
   --paper: #f6f2ec;
   --paper-raised: #fcfaf6;
   --paper-sunk: #eae3d9;
